@@ -12,12 +12,28 @@ Class {
 		'Objects',
 		'Workspaces'
 	],
-	#category : 'Powerlang-Webside'
+	#category : #'Powerlang-Webside'
 }
 
 { #category : #'instance creation' }
 PowerlangWebsideAPI class >> new [
 	^ super new initialize
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> categories [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class protocols
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> classDefinition [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class asWebsideJson
 ]
 
 { #category : #private }
@@ -52,6 +68,21 @@ PowerlangWebsideAPI >> classTreeFrom: aClass depth: anInteger [
 		collect: [ :c | self classTreeFrom: c depth: depth ].
 	json at: 'subclasses' put: subclasses.
 	^ json
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> classVariables [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class withAllSuperclasses
+		gather: [ :c | 
+			c classVarNames asArray sort
+				collect: [ :v | 
+					NeoJSONObject new
+						at: 'name' put: v;
+						at: 'class' put: c name , ' class';
+						yourself ] ]
 ]
 
 { #category : #'code endpoints' }
@@ -139,11 +170,38 @@ PowerlangWebsideAPI >> initializeRuntime [
 ]
 
 { #category : #'code endpoints' }
+PowerlangWebsideAPI >> instanceVariables [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class withAllSuperclasses
+		gather: [ :c | 
+			c instVarNames
+				collect: [ :v | 
+					NeoJSONObject new
+						at: 'name' put: v;
+						at: 'class' put: c name;
+						yourself ] ]
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> method [
+	| class selector |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	selector := self requestedSelector.
+	selector ifNil: [ ^ self notFound ].
+	(class includesSelector: selector)
+		ifFalse: [ ^ self notFound ].
+	^ (class >> selector) asWebsideJson
+]
+
+{ #category : #'code endpoints' }
 PowerlangWebsideAPI >> methods [
 	| selector methods senders global references class |
 	selector := self queriedSelector.
 	selector notNil
-		ifTrue: [ methods := self implementorsOf: selector ]. 
+		ifTrue: [ methods := self implementorsOf: selector ].
 	selector := self queriedSending.
 	selector notNil
 		ifTrue: [ senders := self sendersOf: selector.
@@ -160,7 +218,7 @@ PowerlangWebsideAPI >> methods [
 	(class notNil and: [ methods notNil ])
 		ifTrue: [ methods := methods select: [ :m | m methodClass == class ] ].
 	methods
-		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methodDictionary
+		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methodDict
 				asArray ].
 	methods := self filterByCategory: methods.
 	methods := self filterByVariable: methods.
@@ -244,6 +302,13 @@ PowerlangWebsideAPI >> requestedClass [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> requestedSelector [
+	| selector |
+	selector := self urlAt: 'selector'.
+	^ selector ifNotNil: [ selector asSymbol ]
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> sendersOf: aSymbol [
 	| scope |
 	scope := self queriedScope.
@@ -257,7 +322,23 @@ PowerlangWebsideAPI >> server: aWebsideServer [
 	server := aWebsideServer
 ]
 
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> subclasses [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class subclasses collect: #asWebsideJson
+]
+
 { #category : #private }
 PowerlangWebsideAPI >> urlAt: aString [
 	^ request at: aString ifAbsent: nil
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> variables [
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ self instanceVariables , self classVariables
 ]
