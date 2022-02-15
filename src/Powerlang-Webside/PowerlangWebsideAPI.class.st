@@ -109,7 +109,7 @@ PowerlangWebsideAPI >> classes [
 
 { #category : #private }
 PowerlangWebsideAPI >> defaultRootClass [
-	^ runtime image classNamed: 'Object'
+	^ runtime image => 'Object'
 ]
 
 { #category : #'code endpoints' }
