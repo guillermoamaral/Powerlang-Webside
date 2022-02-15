@@ -1,0 +1,3 @@
+*Powerlang-Webside
+image
+	^image

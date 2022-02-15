@@ -1,0 +1,20 @@
+{
+	"commentStamp" : "",
+	"super" : "Object",
+	"category" : "Powerlang-Webside",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [
+		"Debuggers",
+		"Evaluations",
+		"Objects",
+		"Workspaces"
+	],
+	"instvars" : [
+		"request",
+		"server",
+		"runtime"
+	],
+	"name" : "PowerlangWebsideAPI",
+	"type" : "normal"
+}
