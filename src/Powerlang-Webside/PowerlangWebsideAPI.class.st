@@ -230,6 +230,11 @@ PowerlangWebsideAPI >> notFound [
 	^ ZnResponse notFound: 'resource not found'
 ]
 
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> projects [
+	^ #( )
+]
+
 { #category : #private }
 PowerlangWebsideAPI >> queriedCategory [
 	| category |
