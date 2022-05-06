@@ -161,12 +161,10 @@ PowerlangWebsideAPI >> initialize [
 { #category : #initialization }
 PowerlangWebsideAPI >> initializeRuntime [
 	| image |
-	image := VirtualSmalltalkImage fromSpec
+	image := PowertalkRingImage fromSpec
 		wordSize: 8;
 		genesis.
-	runtime := VirtualSmalltalkRuntime new
-		image: image;
-		initializeClassPools
+	runtime := image runtime
 ]
 
 { #category : #'code endpoints' }
