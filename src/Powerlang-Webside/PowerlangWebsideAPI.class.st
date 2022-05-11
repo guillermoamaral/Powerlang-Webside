@@ -1,10 +1,22 @@
+"
+| image |
+image := PowertalkRingImage fromSpec
+	wordSize: 8;
+	genesis.
+
+WebsideServer new
+		apiClass: PowerlangWebsideAPI;
+		baseUri: '/powerlang';
+		port: 9002;
+		resourcesAt: #runtime put: image runtime;
+		start.
+"
 Class {
 	#name : #PowerlangWebsideAPI,
 	#superclass : #Object,
 	#instVars : [
 		'request',
-		'server',
-		'runtime'
+		'server'
 	],
 	#classVars : [
 		'Debuggers',
@@ -18,6 +30,16 @@ Class {
 { #category : #'instance creation' }
 PowerlangWebsideAPI class >> new [
 	^ super new initialize
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> allSubclassesOf: aSpeciesMap [
+	| image spec |
+
+	image := self image.
+	spec := image => aSpeciesMap name.
+	^ spec allSubclasses
+		collect: [ :c | image speciesFor: image => c name ]
 ]
 
 { #category : #'code endpoints' }
@@ -38,15 +60,9 @@ PowerlangWebsideAPI >> classDefinition [
 
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
-	| name metaclass class |
-	name := aString.
-	metaclass := name endsWith: ' class'.
-	metaclass
-		ifTrue: [ name := name withoutSuffix: ' class' ].
-	class := runtime image => name.
-	^ metaclass
-		ifTrue: [ class metaclass ]
-		ifFalse: [ class ]
+	| image |
+	image := self image.
+	^ image speciesFor: image => aString
 ]
 
 { #category : #private }
@@ -100,7 +116,7 @@ PowerlangWebsideAPI >> classes [
 				ifTrue: [ depth := depth asInteger ].
 			json := self classTreeFrom: root depth: depth.
 			^ Array with: json ].
-	classes := root withAllSubclasses.
+	classes := Array with: root withAll: (self allSubclassesOf: root).
 	names := self queryAt: 'names'.
 	names = 'true'
 		ifTrue: [ ^ (classes collect: #name) sort ].
@@ -109,7 +125,7 @@ PowerlangWebsideAPI >> classes [
 
 { #category : #private }
 PowerlangWebsideAPI >> defaultRootClass [
-	^ runtime image classNamed: 'Object'
+	^ self  classNamed: 'Object'
 ]
 
 { #category : #'code endpoints' }
@@ -144,27 +160,17 @@ PowerlangWebsideAPI >> filterByVariable: aCollection [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> image [
+	^ self runtime image
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> implementorsOf: aSymbol [
 	| scope |
 	scope := self queriedScope.
 	^ scope
 		ifNotNil: [ scope implementorsOf: aSymbol ]
 		ifNil: [ SystemNavigation default allImplementorsOf: aSymbol ]
-]
-
-{ #category : #initialization }
-PowerlangWebsideAPI >> initialize [
-	super initialize.
-	self initializeRuntime
-]
-
-{ #category : #initialization }
-PowerlangWebsideAPI >> initializeRuntime [
-	| image |
-	image := PowertalkRingImage fromSpec
-		wordSize: 8;
-		genesis.
-	runtime := image runtime
 ]
 
 { #category : #'code endpoints' }
@@ -304,6 +310,11 @@ PowerlangWebsideAPI >> requestedSelector [
 	| selector |
 	selector := self urlAt: 'selector'.
 	^ selector ifNotNil: [ selector asSymbol ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> runtime [
+	^ server resourcesAt: #runtime
 ]
 
 { #category : #private }

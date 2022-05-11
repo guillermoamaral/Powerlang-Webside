@@ -45,15 +45,23 @@ PowerlangWebsideAPITest >> post: uri with: body [
 
 { #category : #running }
 PowerlangWebsideAPITest >> setUp [
+	| image |
 	super setUp.
+
+image := PowertalkRingImage fromSpec
+	wordSize: 8;
+	genesis.
+
+	
 	server := WebsideServer new.
 	server
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/websideapitest';
 		port: 9999;
+		resourcesAt: #runtime put: image runtime;
+
 		start.
-	client := ZnClient new
-		accept: ZnMimeType applicationJson
+	client := ZnClient new accept: ZnMimeType applicationJson
 ]
 
 { #category : #running }
