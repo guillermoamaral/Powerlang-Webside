@@ -5,7 +5,7 @@ Class {
 		'server',
 		'client'
 	],
-	#category : 'Powerlang-Webside'
+	#category : #'Powerlang-Webside'
 }
 
 { #category : #private }
@@ -19,11 +19,15 @@ PowerlangWebsideAPITest >> delete: uri [
 PowerlangWebsideAPITest >> get: uri [
 	| url data |
 	url := server baseUrl asString.
-	(uri beginsWith: '/') ifFalse: [ url := url , '/' ].
+	(uri beginsWith: '/')
+		ifFalse: [ url := url , '/' ].
 	url := url , uri.
 	data := client get: url.
 	client isNotFound
 		ifTrue: [ ^ nil ].
+			client isSuccess
+		ifFalse: [ self error: client contents asString ].
+
 	^ data ifNotNil: [ NeoJSONObject fromString: data ]
 ]
 
@@ -406,6 +410,8 @@ PowerlangWebsideAPITest >> testClassVariables [
 { #category : #'code endpoints' }
 PowerlangWebsideAPITest >> testClasses [
 	| classes names tree root integer |
+	classes := self get: 'classes'.
+	self assert: classes notEmpty.
 	classes := self get: 'classes?root=Magnitude'.
 	self
 		assert:
