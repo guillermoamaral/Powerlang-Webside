@@ -66,21 +66,22 @@ PowerlangWebsideAPI >> classNamed: aString [
 ]
 
 { #category : #private }
-PowerlangWebsideAPI >> classTreeFrom: aClass depth: anInteger [
+PowerlangWebsideAPI >> classTreeFrom: aSpeciesMap depth: anInteger [
 	| json subclasses depth names |
 	names := self queryAt: 'names'.
 	json := names = 'true'
 		ifTrue: [ NeoJSONObject new
-				at: 'name' put: aClass name;
+				at: 'name' put: aSpeciesMap name;
 				at: 'superclass'
-					put: (aClass superclass ifNotNil: [ :c | c name ]);
+					put: (aSpeciesMap superclass ifNotNil: [ :c | c name ]);
 				yourself ]
-		ifFalse: [ aClass asWebsideJson ].
+		ifFalse: [ aSpeciesMap asWebsideJson ].
 	(anInteger notNil and: [ anInteger = 0 ])
 		ifTrue: [ ^ json ].
 	depth := anInteger notNil
 		ifTrue: [ anInteger - 1 ].
-	subclasses := (aClass subclasses sort: [ :a :b | a name <= b name ])
+	subclasses := ((self subclassesOf: aSpeciesMap)
+		sort: [ :a :b | a name <= b name ])
 		collect: [ :c | self classTreeFrom: c depth: depth ].
 	json at: 'subclasses' put: subclasses.
 	^ json
@@ -92,13 +93,16 @@ PowerlangWebsideAPI >> classVariables [
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
 	^ class withAllSuperclasses
-		gather: [ :c | 
-			c classVarNames asArray sort
+		gather: [ :c | | slots |
+			slots := c classVariables slots.
+			slots isEmpty ifTrue: [#() ] ifFalse: [
+				slots first keys slots
+		
 				collect: [ :v | 
 					NeoJSONObject new
-						at: 'name' put: v;
+						at: 'name' put: v contentsString;
 						at: 'class' put: c name , ' class';
-						yourself ] ]
+						yourself ] ]]
 ]
 
 { #category : #'code endpoints' }
@@ -180,10 +184,10 @@ PowerlangWebsideAPI >> instanceVariables [
 	class ifNil: [ ^ self notFound ].
 	^ class withAllSuperclasses
 		gather: [ :c | 
-			c instVarNames
+			c instanceVariables slots
 				collect: [ :v | 
 					NeoJSONObject new
-						at: 'name' put: v;
+						at: 'name' put: v contentsString;
 						at: 'class' put: c name;
 						yourself ] ]
 ]
@@ -329,6 +333,15 @@ PowerlangWebsideAPI >> sendersOf: aSymbol [
 { #category : #accessing }
 PowerlangWebsideAPI >> server: aWebsideServer [
 	server := aWebsideServer
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> subclassesOf: aSpeciesMap [
+	| image spec |
+	image := self image.
+	spec := image => aSpeciesMap name.
+	^ spec subclasses
+		collect: [ :c | image speciesFor: image => c name ]
 ]
 
 { #category : #private }
