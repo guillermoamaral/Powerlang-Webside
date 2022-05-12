@@ -93,16 +93,17 @@ PowerlangWebsideAPI >> classVariables [
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
 	^ class withAllSuperclasses
-		gather: [ :c | | slots |
+		gather: [ :c | 
+			| slots |
 			slots := c classVariables slots.
-			slots isEmpty ifTrue: [#() ] ifFalse: [
-				slots first keys slots
-		
-				collect: [ :v | 
-					NeoJSONObject new
-						at: 'name' put: v contentsString;
-						at: 'class' put: c name , ' class';
-						yourself ] ]]
+			slots isEmpty
+				ifTrue: [ #() ]
+				ifFalse: [ slots first keys slots
+						collect: [ :v | 
+							NeoJSONObject new
+								at: 'name' put: v asString;
+								at: 'class' put: c name , ' class';
+								yourself ] ] ]
 ]
 
 { #category : #'code endpoints' }
@@ -187,7 +188,7 @@ PowerlangWebsideAPI >> instanceVariables [
 			c instanceVariables slots
 				collect: [ :v | 
 					NeoJSONObject new
-						at: 'name' put: v contentsString;
+						at: 'name' put: v asString;
 						at: 'class' put: c name;
 						yourself ] ]
 ]
