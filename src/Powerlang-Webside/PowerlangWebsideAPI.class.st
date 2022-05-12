@@ -1,15 +1,22 @@
 "
 | image |
 image := PowertalkRingImage fromSpec
-	wordSize: 8;
-	genesis.
+		wordSize: 8;
+		genesis;
+		bootstrap;
+		fillClasses;
+		fillSymbols;
+		generateLMR.
 
 WebsideServer new
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/powerlang';
 		port: 9002;
-		resourcesAt: #runtime put: image runtime;
+		resourcesAt: #runtime put: runtime;
 		start.
+		
+
+WebsideServer allInstances anyone.
 "
 Class {
 	#name : #PowerlangWebsideAPI,
