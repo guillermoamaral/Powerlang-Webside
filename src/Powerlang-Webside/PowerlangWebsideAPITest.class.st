@@ -5,7 +5,7 @@ Class {
 		'server',
 		'client'
 	],
-	#category : #'Powerlang-Webside'
+	#category : #'Powerlang-Webside-Tests'
 }
 
 { #category : #private }

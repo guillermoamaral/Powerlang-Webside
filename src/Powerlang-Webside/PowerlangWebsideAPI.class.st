@@ -31,7 +31,7 @@ Class {
 		'Objects',
 		'Workspaces'
 	],
-	#category : #'Powerlang-Webside'
+	#category : #'Powerlang-Webside-Base'
 }
 
 { #category : #'instance creation' }
@@ -94,12 +94,14 @@ PowerlangWebsideAPI >> classDefinition [
 
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
-	| runtime class highest classes |
+	| runtime class highest |
 	runtime := self runtime.
-	class := runtime sendLocal: #class to: runtime nil.
-	highest := [class = runtime nil] whileFalse: [ class := (runtime sendLocal: #superclass to: class) ].
-	classes := (runtime sendLocal: #allSubclasses to: class) slots last slots.
-	^classes detect: [ :c | (runtime sendLocal: #name to: c) asLocalString = aString ] ifNone: nil
+	class := PowerlangWebsideObject on: runtime nil runtime: runtime.
+	highest := [ class = runtime nil ]
+		whileFalse: [ class := class superclass ].
+	^highest allSubclasses
+		detect: [ :c | c name  = aString ]
+		ifNone: nil
 ]
 
 { #category : #private }
