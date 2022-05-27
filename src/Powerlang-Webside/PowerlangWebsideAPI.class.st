@@ -44,6 +44,7 @@ PowerlangWebsideAPI class >> startServer [
 	"
 	self startServer
 	"
+
 	| runtime |
 	runtime := PowertalkRingImage fromSpec
 		wordSize: 8;
@@ -52,7 +53,7 @@ PowerlangWebsideAPI class >> startServer [
 		fillClasses;
 		fillSymbols;
 		generateLMR.
-	WebsideServer new
+	^WebsideServer new
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/powerlang';
 		port: 9002;
@@ -97,9 +98,12 @@ PowerlangWebsideAPI >> classDefinition [
 
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
-	| image |
-	image := self image.
-	^ image speciesFor: image => aString
+	| runtime class highest classes |
+	runtime := self runtime.
+	class := runtime sendLocal: #class to: runtime nil.
+	highest := [class = runtime nil] whileFalse: [ class := (runtime sendLocal: #superclass to: class) ].
+	classes := (runtime sendLocal: #allSubclasses to: class) slots last slots.
+	^classes detect: [ :c | (runtime sendLocal: #name to: c) asLocalString = aString ] ifNone: nil
 ]
 
 { #category : #private }
