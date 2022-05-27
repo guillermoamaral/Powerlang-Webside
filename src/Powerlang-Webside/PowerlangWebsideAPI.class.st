@@ -39,6 +39,36 @@ PowerlangWebsideAPI class >> new [
 	^ super new initialize
 ]
 
+{ #category : #services }
+PowerlangWebsideAPI class >> startServer [
+	"
+	self startServer
+	"
+	| runtime |
+	runtime := PowertalkRingImage fromSpec
+		wordSize: 8;
+		genesis;
+		bootstrap;
+		fillClasses;
+		fillSymbols;
+		generateLMR.
+	WebsideServer new
+		apiClass: PowerlangWebsideAPI;
+		baseUri: '/powerlang';
+		port: 9002;
+		resourcesAt: #runtime put: runtime;
+		start
+]
+
+{ #category : #services }
+PowerlangWebsideAPI class >> stopServer [
+	"
+	self stopServer
+	"
+
+	WebsideServer allInstances do: #stop
+]
+
 { #category : #private }
 PowerlangWebsideAPI >> allSubclassesOf: aSpeciesMap [
 	| image spec |
