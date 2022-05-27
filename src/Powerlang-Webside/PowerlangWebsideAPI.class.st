@@ -71,13 +71,9 @@ PowerlangWebsideAPI class >> stopServer [
 ]
 
 { #category : #private }
-PowerlangWebsideAPI >> allSubclassesOf: aSpeciesMap [
-	| image spec |
-
-	image := self image.
-	spec := image => aSpeciesMap name.
-	^ spec allSubclasses
-		collect: [ :c | image speciesFor: image => c name ]
+PowerlangWebsideAPI >> allSubclassesOf: anLMRObject [
+	^ (self runtime sendLocal: #allSubclasses to: anLMRObject) slots last
+		slots
 ]
 
 { #category : #'code endpoints' }
@@ -166,7 +162,7 @@ PowerlangWebsideAPI >> classes [
 	names := self queryAt: 'names'.
 	names = 'true'
 		ifTrue: [ ^ (classes collect: #name) sort ].
-	^ classes collect: #asWebsideJson
+	^ classes collect: [:c | self jsonOfClass: c]
 ]
 
 { #category : #private }
@@ -176,7 +172,7 @@ PowerlangWebsideAPI >> defaultRootClass [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> dialect [
-	^ 'Powerlang-Ring'
+	^ 'Powerlang'
 ]
 
 { #category : #private }
@@ -232,6 +228,18 @@ PowerlangWebsideAPI >> instanceVariables [
 						at: 'name' put: v asString;
 						at: 'class' put: c name;
 						yourself ] ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> jsonOfClass: anLMRObject [ 
+	^NeoJSONObject new
+		at: 'name' put: anLMRObject name;
+		at: 'definition' put: anLMRObject oldDefinition;
+		at: 'superclass' put: (anLMRObject superclass ifNotNil: [ :c | c name ]);
+		at: 'comment' put: anLMRObject comment;
+		at: 'variable' put: anLMRObject isVariable;
+		at: 'project' put: anLMRObject package name;
+		yourself
 ]
 
 { #category : #'code endpoints' }
