@@ -26,7 +26,7 @@ PowerlangSpeciesWrapper >> classVariablesString [
 				separatedBy: [ s space ] ]
 ]
 
-{ #category : #private }
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> definition [
 	| highest |
 	^ String
@@ -72,6 +72,17 @@ PowerlangSpeciesWrapper >> instanceVariablesString [
 			self instVarNames asArray wrappee slots
 				do: [ :n | s nextPutAll: n asLocalString ]
 				separatedBy: [ s space ] ]
+]
+
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> methods [
+	| md |
+	md :=
+self methodDictionary.
+	^md keys asSet asArray wrappee slots collect: [ :k 
+		| PowerlangMethodWrapper on: (md at: k) runtime: runtime
+		
+		 ]
 ]
 
 { #category : #private }

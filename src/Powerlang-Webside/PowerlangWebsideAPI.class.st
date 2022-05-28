@@ -70,12 +70,6 @@ PowerlangWebsideAPI class >> stopServer [
 	WebsideServer allInstances do: #stop
 ]
 
-{ #category : #private }
-PowerlangWebsideAPI >> allSubclassesOf: anLMRObject [
-	^ (self runtime sendLocal: #allSubclasses to: anLMRObject) slots last
-		slots
-]
-
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> categories [
 	| class |
@@ -158,11 +152,11 @@ PowerlangWebsideAPI >> classes [
 				ifTrue: [ depth := depth asInteger ].
 			json := self classTreeFrom: root depth: depth.
 			^ Array with: json ].
-	classes := Array with: root withAll: (self allSubclassesOf: root).
+	classes := Array with: root withAll: root allSubclasses.
 	names := self queryAt: 'names'.
 	names = 'true'
 		ifTrue: [ ^ (classes collect: #name) sort ].
-	^ classes collect: #asWebsideJson 
+	^ classes collect: #asWebsideJson
 ]
 
 { #category : #private }
