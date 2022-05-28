@@ -13,13 +13,30 @@ PowerlangObjectWrapper class >> on: anLMRObject runtime: aPowerlangLMR [
 ^self new wrappee: anLMRObject ; runtime: aPowerlangLMR 
 ]
 
+{ #category : #converting }
+PowerlangObjectWrapper >> asWebsideJson [
+	| variable |
+	variable := self objectClass isVariable wrappee = runtime true.
+	^ NeoJSONObject new
+		at: 'class' put: self objectClass name wrappee asLocalString;
+		at: 'indexable' put: variable;
+		at: 'size'
+			put:
+			(variable
+				ifTrue: [ self size wrappee value ]
+				ifFalse: [ 0 ]);
+		at: 'printString' put: self printString;
+		yourself
+]
+
 { #category : #accessing }
 PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
-	| result class |
+	| arguments result class |
+	arguments := aMessage arguments collect: [ :a | (a class == PowerlangObjectWrapper or: [ a class inheritsFrom: PowerlangObjectWrapper]) ifTrue: [a wrappee] ifFalse: [ a ]].
 	result := runtime
 		sendLocal: aMessage selector
 		to: wrappee
-		with: aMessage arguments.
+		with: arguments.
 	(result isKindOf: LMRObject)
 		ifFalse: [ ^ result ].
 	class := (runtime sendLocal: #isClass to: result) = runtime true

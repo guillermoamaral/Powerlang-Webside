@@ -97,9 +97,9 @@ PowerlangWebsideAPI >> classNamed: aString [
 	| runtime class highest |
 	runtime := self runtime.
 	class := PowerlangObjectWrapper on: runtime nil runtime: runtime.
-	highest := [ class = runtime nil ]
+	highest := [ class wrappee = runtime nil ]
 		whileFalse: [ class := class superclass ].
-	^ highest allSubclasses detect: [ :c | c name = aString ] ifNone: nil
+	^ highest allSubclasses asArray slots detect: [ :c | c name = aString ] ifNone: nil
 ]
 
 { #category : #private }
@@ -162,7 +162,7 @@ PowerlangWebsideAPI >> classes [
 	names := self queryAt: 'names'.
 	names = 'true'
 		ifTrue: [ ^ (classes collect: #name) sort ].
-	^ classes collect: [:c | self jsonOfClass: c]
+	^ classes collect: #asWebsideJson 
 ]
 
 { #category : #private }
@@ -228,18 +228,6 @@ PowerlangWebsideAPI >> instanceVariables [
 						at: 'name' put: v asString;
 						at: 'class' put: c name;
 						yourself ] ]
-]
-
-{ #category : #private }
-PowerlangWebsideAPI >> jsonOfClass: anLMRObject [ 
-	^NeoJSONObject new
-		at: 'name' put: anLMRObject name;
-		at: 'definition' put: anLMRObject oldDefinition;
-		at: 'superclass' put: (anLMRObject superclass ifNotNil: [ :c | c name ]);
-		at: 'comment' put: anLMRObject comment;
-		at: 'variable' put: anLMRObject isVariable;
-		at: 'project' put: anLMRObject package name;
-		yourself
 ]
 
 { #category : #'code endpoints' }

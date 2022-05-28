@@ -3,3 +3,82 @@ Class {
 	#superclass : #PowerlangObjectWrapper,
 	#category : #'Powerlang-Webside-Base'
 }
+
+{ #category : #converting }
+PowerlangSpeciesWrapper >> asWebsideJson [ 
+	^ super asWebsideJson
+		at: 'name' put: self name asLocalString ;
+		at: 'definition' put: self definition asLocalString;
+		at: 'superclass'
+			put: (self superclass != runtime nil ifTrue: [ self superclass name asLocalString ]);
+		at: 'comment' put: self comment asLocalString;
+		at: 'variable' put: false;
+		at: 'project' put: '';
+		yourself
+]
+
+{ #category : #private }
+PowerlangSpeciesWrapper >> classVariablesString [
+	^ String
+		streamContents: [ :s | 
+			self classVarNames asArray wrappee slots
+				do: [ :n | s nextPutAll: n asLocalString ]
+				separatedBy: [ s space ] ]
+]
+
+{ #category : #private }
+PowerlangSpeciesWrapper >> definition [
+	| highest |
+	^ String
+		streamContents: [ :strm | 
+			highest := self superclass wrappee = runtime nil.
+			highest
+				ifTrue: [ strm nextPutAll: 'ProtoObject' ]
+				ifFalse: [ strm nextPutAll: self superclass name wrappee asLocalString ].
+			strm
+				space;
+				nextPutAll: self kindOfSubclass wrappee asLocalString;
+				space;
+				store: self name wrappee asLocalString;
+				cr;
+				tab;
+				nextPutAll: 'instanceVariableNames: ';
+				store: self instanceVariablesString;
+				cr;
+				tab;
+				nextPutAll: 'classVariableNames: ';
+				store: self classVariablesString;
+				cr;
+				tab;
+				nextPutAll: 'poolDictionaries: ';
+				store: self sharedPoolsString;
+				cr;
+				tab;
+				nextPutAll: 'category: ';
+				store: ''.
+			highest
+				ifTrue: [ strm
+						nextPutAll: '.';
+						cr;
+						nextPutAll: self name wrappee asLocalString;
+						space;
+						nextPutAll: 'superclass: nil' ] ]
+]
+
+{ #category : #private }
+PowerlangSpeciesWrapper >> instanceVariablesString [
+	^ String
+		streamContents: [ :s | 
+			self instVarNames asArray wrappee slots
+				do: [ :n | s nextPutAll: n asLocalString ]
+				separatedBy: [ s space ] ]
+]
+
+{ #category : #private }
+PowerlangSpeciesWrapper >> sharedPoolsString [
+	^ String
+		streamContents: [ :s | 
+			self sharedPools asArray wrappee slots
+				do: [ :n | s nextPutAll: n asLocalString ]
+				separatedBy: [ s space ] ]
+]
