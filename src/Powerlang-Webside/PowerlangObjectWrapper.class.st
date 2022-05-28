@@ -15,14 +15,17 @@ PowerlangObjectWrapper class >> on: anLMRObject runtime: aPowerlangLMR [
 
 { #category : #accessing }
 PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
-	| result |
+	| result class |
 	result := runtime
 		sendLocal: aMessage selector
 		to: wrappee
 		with: aMessage arguments.
 	(result isKindOf: LMRObject)
 		ifFalse: [ ^ result ].
-	^ self class on: result runtime: runtime
+	class := (runtime sendLocal: #isClass to: result) = runtime true
+		ifTrue: [ PowerlangSpeciesWrapper ]
+		ifFalse: [ PowerlangObjectWrapper ].
+	^ class on: result runtime: runtime
 ]
 
 { #category : #inquiries }
