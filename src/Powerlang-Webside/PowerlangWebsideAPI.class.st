@@ -88,12 +88,15 @@ PowerlangWebsideAPI >> classDefinition [
 
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
-	| runtime class highest |
+	| runtime highest |
 	runtime := self runtime.
-	class := PowerlangObjectWrapper on: runtime nil runtime: runtime.
-	highest := [ class wrappee = runtime nil ]
-		whileFalse: [ class := class superclass ].
-	^ highest allSubclasses asArray slots detect: [ :c | c name = aString ] ifNone: nil
+	highest := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
+		objectClass.
+	[ highest superclass wrappee = runtime nil ]
+		whileFalse: [ highest := highest superclass ].
+	^ highest allSubclasses
+		detect: [ :c | c name wrappee asLocalString = aString ]
+		ifNone: nil
 ]
 
 { #category : #private }

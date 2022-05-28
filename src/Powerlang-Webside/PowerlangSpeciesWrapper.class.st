@@ -4,14 +4,22 @@ Class {
 	#category : #'Powerlang-Webside-Base'
 }
 
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> allSubclasses [
+	^ super allSubclasses asArray wrappee slots
+		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
+]
+
 { #category : #converting }
-PowerlangSpeciesWrapper >> asWebsideJson [ 
+PowerlangSpeciesWrapper >> asWebsideJson [
 	^ super asWebsideJson
-		at: 'name' put: self name asLocalString ;
-		at: 'definition' put: self definition asLocalString;
+		at: 'name' put: wrappee printString;
+		at: 'definition' put: self definition;
 		at: 'superclass'
-			put: (self superclass != runtime nil ifTrue: [ self superclass name asLocalString ]);
-		at: 'comment' put: self comment asLocalString;
+			put:
+			((self superclass != runtime nil) = runtime true
+				ifTrue: [ self superclass name wrappee asLocalString ]);
+		at: 'comment' put: self comment wrappee asLocalString;
 		at: 'variable' put: false;
 		at: 'project' put: '';
 		yourself
@@ -77,12 +85,14 @@ PowerlangSpeciesWrapper >> instanceVariablesString [
 { #category : #inquiries }
 PowerlangSpeciesWrapper >> methods [
 	| md |
-	md :=
-self methodDictionary.
-	^md keys asSet asArray wrappee slots collect: [ :k 
-		| PowerlangMethodWrapper on: (md at: k) runtime: runtime
+	md := self methodDictionary.
+	"^ md keys asSet asArray wrappee slots
+		collect:
+			[ :k | PowerlangMethodWrapper on: (md at: k) wrappee runtime: runtime ]"
+	^ md wrappee slots second slots select: [ :o |  
+		(runtime sendLocal: #isCompiledMethod to: o) = runtime true
 		
-		 ]
+		] thenCollect: [ :o |  PowerlangMethodWrapper on: o runtime: runtime]
 ]
 
 { #category : #private }
