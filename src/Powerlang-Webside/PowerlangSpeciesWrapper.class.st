@@ -17,7 +17,7 @@ PowerlangSpeciesWrapper >> asWebsideJson [
 		at: 'definition' put: self definition;
 		at: 'superclass'
 			put:
-			((self superclass != runtime nil) = runtime true
+			((self superclass wrappee != runtime nil)
 				ifTrue: [ self superclass name wrappee asLocalString ]);
 		at: 'comment' put: self comment wrappee asLocalString;
 		at: 'variable' put: false;

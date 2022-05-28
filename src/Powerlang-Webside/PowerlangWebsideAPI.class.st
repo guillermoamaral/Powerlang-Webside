@@ -158,8 +158,8 @@ PowerlangWebsideAPI >> classes [
 	classes := Array with: root withAll: root allSubclasses.
 	names := self queryAt: 'names'.
 	names = 'true'
-		ifTrue: [ ^ (classes collect: #name) sort ].
-	^ classes collect: #asWebsideJson
+		ifTrue: [ ^ (classes collect: [:c | c name]) sort ].
+	^ classes collect: [:c | c asWebsideJson]
 ]
 
 { #category : #private }
