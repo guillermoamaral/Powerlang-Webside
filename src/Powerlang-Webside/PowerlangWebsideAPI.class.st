@@ -96,7 +96,7 @@ PowerlangWebsideAPI >> classDefinition [
 PowerlangWebsideAPI >> classNamed: aString [
 	| runtime class highest |
 	runtime := self runtime.
-	class := PowerlangWebsideObject on: runtime nil runtime: runtime.
+	class := PowerlangObjectWrapper2 on: runtime nil runtime: runtime.
 	highest := [ class = runtime nil ]
 		whileFalse: [ class := class superclass ].
 	^highest allSubclasses
