@@ -78,7 +78,7 @@ PowerlangWebsideAPI >> classNamed: aString [
 	[ highest superclass wrappee = runtime nil ]
 		whileFalse: [ highest := highest superclass ].
 	^ highest allSubclasses
-		detect: [ :c | c name wrappee asLocalString = aString ]
+		detect: [ :c | c name = aString ]
 		ifNone: nil
 ]
 
@@ -244,8 +244,8 @@ PowerlangWebsideAPI >> methods [
 	(class notNil and: [ methods notNil ])
 		ifTrue: [ methods := methods select: [ :m | m methodClass == class ] ].
 	methods
-		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methodDict
-				asArray ].
+		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methods ].
+	self halt.
 	methods := self filterByCategory: methods.
 	methods := self filterByVariable: methods.
 	^ methods collect: #asWebsideJson

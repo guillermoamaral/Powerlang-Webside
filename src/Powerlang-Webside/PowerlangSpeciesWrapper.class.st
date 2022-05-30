@@ -35,6 +35,11 @@ PowerlangSpeciesWrapper >> classVariablesString [
 ]
 
 { #category : #inquiries }
+PowerlangSpeciesWrapper >> comment [
+	^ super comment wrappee asLocalString
+]
+
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> definition [
 	| highest |
 	^ String

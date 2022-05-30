@@ -7,8 +7,8 @@ Class {
 { #category : #converting }
 PowerlangMethodWrapper >> asWebsideJson [
 	^ super asWebsideJson
-		at: 'selector' put: self selector wrappee asLocalString;
-		at: 'class' put: self classBinding name wrappee asLocalString;
+		at: 'selector' put: self selector;
+		at: 'class' put: self classBinding name;
 		at: 'category' put: 'self category';
 		at: 'source' put: self sourceCode;
 		at: 'author' put: 'self author';
@@ -18,7 +18,12 @@ PowerlangMethodWrapper >> asWebsideJson [
 		yourself
 ]
 
-{ #category : #accessing }
+{ #category : #inquiries }
+PowerlangMethodWrapper >> selector [
+	^ super selector wrappee asLocalString
+]
+
+{ #category : #inquiries }
 PowerlangMethodWrapper >> sourceCode [
 	^ self sourceObject wrappee asLocalString
 ]

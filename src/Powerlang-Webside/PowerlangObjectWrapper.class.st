@@ -39,7 +39,7 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 		with: arguments.
 	(result isKindOf: LMRObject)
 		ifFalse: [ ^ result ].
-	class := (runtime sendLocal: #isClass to: result) = runtime true
+	class := (runtime sendLocal: #isSpecies to: result) = runtime true
 		ifTrue: [ PowerlangSpeciesWrapper ]
 		ifFalse: [ PowerlangObjectWrapper ].
 	^ class on: result runtime: runtime
@@ -48,6 +48,11 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 { #category : #accessing }
 PowerlangObjectWrapper >> inspect [
 	^wrappee inspect
+]
+
+{ #category : #testing }
+PowerlangObjectWrapper >> notNil [
+	^(runtime sendLocal: #notNil to: wrappee) != runtime nil
 ]
 
 { #category : #inquiries }
