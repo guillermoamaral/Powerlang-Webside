@@ -1,22 +1,5 @@
 "
-| image |
-image := PowertalkRingImage fromSpec
-		wordSize: 8;
-		genesis;
-		bootstrap;
-		fillClasses;
-		fillSymbols;
-		generateLMR.
-
-WebsideServer new
-		apiClass: PowerlangWebsideAPI;
-		baseUri: '/powerlang';
-		port: 9002;
-		resourcesAt: #runtime put: runtime;
-		start.
-		
-
-WebsideServer allInstances anyone.
+self startServer
 "
 Class {
 	#name : #PowerlangWebsideAPI,
@@ -45,19 +28,19 @@ PowerlangWebsideAPI class >> startServer [
 	self startServer
 	"
 
-	| runtime |
-	runtime := PowertalkRingImage fromSpec
+	| bootstrapper |
+	bootstrapper := PowertalkRingImage fromSpec
 		wordSize: 8;
 		genesis;
 		bootstrap;
 		fillClasses;
 		fillSymbols;
 		generateLMR.
-	^WebsideServer new
+	^ WebsideServer new
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/powerlang';
 		port: 9002;
-		resourcesAt: #runtime put: runtime;
+		resourcesAt: #runtime put: bootstrapper result;
 		start
 ]
 

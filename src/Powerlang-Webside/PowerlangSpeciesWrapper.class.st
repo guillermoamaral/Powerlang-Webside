@@ -13,13 +13,13 @@ PowerlangSpeciesWrapper >> allSubclasses [
 { #category : #converting }
 PowerlangSpeciesWrapper >> asWebsideJson [
 	^ super asWebsideJson
-		at: 'name' put: self name wrappee asLocalString;
+		at: 'name' put: self name;
 		at: 'definition' put: self definition;
 		at: 'superclass'
 			put:
 			(self superclass wrappee != runtime nil
-				ifTrue: [ self superclass name wrappee asLocalString ]);
-		at: 'comment' put: self instanceClass comment wrappee asLocalString;
+				ifTrue: [ self superclass name  ]);
+		at: 'comment' put: self instanceClass comment;
 		at: 'variable' put: false;
 		at: 'project' put: '';
 		yourself
@@ -42,12 +42,12 @@ PowerlangSpeciesWrapper >> definition [
 			highest := self superclass wrappee = runtime nil.
 			highest
 				ifTrue: [ strm nextPutAll: 'ProtoObject' ]
-				ifFalse: [ strm nextPutAll: self superclass name wrappee asLocalString ].
+				ifFalse: [ strm nextPutAll: self superclass name ].
 			strm
 				space;
 				nextPutAll: self kindOfSubclass wrappee asLocalString;
 				space;
-				store: self name wrappee asLocalString;
+				store: self name;
 				cr;
 				tab;
 				nextPutAll: 'instanceVariableNames: ';
@@ -68,7 +68,7 @@ PowerlangSpeciesWrapper >> definition [
 				ifTrue: [ strm
 						nextPutAll: '.';
 						cr;
-						nextPutAll: self name wrappee asLocalString;
+						nextPutAll: self name;
 						space;
 						nextPutAll: 'superclass: nil' ] ]
 ]
@@ -86,13 +86,14 @@ PowerlangSpeciesWrapper >> instanceVariablesString [
 PowerlangSpeciesWrapper >> methods [
 	| md |
 	md := self methodDictionary.
-	"^ md keys asSet asArray wrappee slots
+	^ md keys asSet asArray wrappee slots
 		collect:
-			[ :k | PowerlangMethodWrapper on: (md at: k) wrappee runtime: runtime ]"
-	^ md wrappee slots second slots select: [ :o |  
-		(runtime sendLocal: #isCompiledMethod to: o) = runtime true
-		
-		] thenCollect: [ :o |  PowerlangMethodWrapper on: o runtime: runtime]
+			[ :k | PowerlangMethodWrapper on: (md at: k) wrappee runtime: runtime ]
+]
+
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> name [
+	^super name wrappee asLocalString
 ]
 
 { #category : #private }

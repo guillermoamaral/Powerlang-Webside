@@ -45,9 +45,9 @@ PowerlangWebsideAPITest >> post: uri with: body [
 
 { #category : #running }
 PowerlangWebsideAPITest >> setUp [
-	| runtime |
+	| bootstrapper |
 	super setUp.
-	runtime := PowertalkRingImage fromSpec
+	bootstrapper := PowertalkRingImage fromSpec
 		wordSize: 8;
 		genesis;
 		bootstrap;
@@ -59,7 +59,7 @@ PowerlangWebsideAPITest >> setUp [
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/websideapitest';
 		port: 9999;
-		resourcesAt: #runtime put: runtime;
+		resourcesAt: #runtime put: bootstrapper result;
 		start.
 	client := ZnClient new accept: ZnMimeType applicationJson
 ]
