@@ -13,13 +13,13 @@ PowerlangSpeciesWrapper >> allSubclasses [
 { #category : #converting }
 PowerlangSpeciesWrapper >> asWebsideJson [
 	^ super asWebsideJson
-		at: 'name' put: wrappee printString;
+		at: 'name' put: self name wrappee asLocalString;
 		at: 'definition' put: self definition;
 		at: 'superclass'
 			put:
-			((self superclass wrappee != runtime nil)
+			(self superclass wrappee != runtime nil
 				ifTrue: [ self superclass name wrappee asLocalString ]);
-		at: 'comment' put: self comment wrappee asLocalString;
+		at: 'comment' put: self instanceClass comment wrappee asLocalString;
 		at: 'variable' put: false;
 		at: 'project' put: '';
 		yourself

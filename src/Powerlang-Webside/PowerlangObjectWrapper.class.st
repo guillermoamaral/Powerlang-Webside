@@ -18,7 +18,7 @@ PowerlangObjectWrapper >> asWebsideJson [
 	| variable |
 	variable := self objectClass isVariable wrappee = runtime true.
 	^ NeoJSONObject new
-		at: 'class' put: self name wrappee asLocalString;
+		at: 'class' put: self objectClass name wrappee asLocalString;
 		at: 'indexable' put: variable;
 		at: 'size'
 			put:
@@ -43,6 +43,11 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 		ifTrue: [ PowerlangSpeciesWrapper ]
 		ifFalse: [ PowerlangObjectWrapper ].
 	^ class on: result runtime: runtime
+]
+
+{ #category : #accessing }
+PowerlangObjectWrapper >> inspect [
+	^wrappee inspect
 ]
 
 { #category : #inquiries }
