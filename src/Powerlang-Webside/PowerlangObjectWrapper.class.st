@@ -68,8 +68,10 @@ PowerlangObjectWrapper >> objectClass [
 ]
 
 { #category : #printing }
-PowerlangObjectWrapper >> printString [
-	^wrappee printString
+PowerlangObjectWrapper >> printOn: aStream [
+	"aStream
+		nextPutAll: (runtime sendLocal: #printString to: wrappee) wrappee asLocalString"
+		wrappee printOn: aStream
 ]
 
 { #category : #accessing }
