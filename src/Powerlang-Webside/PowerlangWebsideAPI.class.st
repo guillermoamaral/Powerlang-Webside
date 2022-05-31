@@ -245,10 +245,9 @@ PowerlangWebsideAPI >> methods [
 		ifTrue: [ methods := methods select: [ :m | m methodClass == class ] ].
 	methods
 		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methods ].
-	self halt.
 	methods := self filterByCategory: methods.
 	methods := self filterByVariable: methods.
-	^ methods collect: #asWebsideJson
+	^ methods collect: [ :m | m asWebsideJson ]
 ]
 
 { #category : #private }

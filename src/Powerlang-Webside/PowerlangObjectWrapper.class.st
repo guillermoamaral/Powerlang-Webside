@@ -74,6 +74,11 @@ PowerlangObjectWrapper >> printOn: aStream [
 		wrappee printOn: aStream
 ]
 
+{ #category : #printing }
+PowerlangObjectWrapper >> printString [
+	^ String streamContents: [ :strm | self printOn: strm ]
+]
+
 { #category : #accessing }
 PowerlangObjectWrapper >> runtime: aPowerlangLMR [
 	runtime := aPowerlangLMR

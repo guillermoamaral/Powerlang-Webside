@@ -25,5 +25,7 @@ PowerlangMethodWrapper >> selector [
 
 { #category : #inquiries }
 PowerlangMethodWrapper >> sourceCode [
-	^ self sourceObject wrappee asLocalString
+	| source |
+	source := self sourceObject wrappee.
+	^source = runtime nil ifTrue: ['no source'] ifFalse: [source asLocalString]
 ]
