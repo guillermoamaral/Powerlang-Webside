@@ -83,21 +83,24 @@ PowerlangWebsideAPI >> classNamed: aString [
 ]
 
 { #category : #private }
-PowerlangWebsideAPI >> classTreeFrom: aSpeciesMap depth: anInteger [
-	| json subclasses depth names |
+PowerlangWebsideAPI >> classTreeFrom: aPowerlangSpeciesWrapper depth: anInteger [
+	| json subclasses depth names superclass |
 	names := self queryAt: 'names'.
 	json := names = 'true'
-		ifTrue: [ NeoJSONObject new
-				at: 'name' put: aSpeciesMap name;
+		ifTrue: [ 
+			superclass := aPowerlangSpeciesWrapper superclass.
+			
+			NeoJSONObject new
+				at: 'name' put: aPowerlangSpeciesWrapper name;
 				at: 'superclass'
-					put: (aSpeciesMap superclass ifNotNil: [ :c | c name ]);
+					put: (superclass = self runtime nil ifFalse: [ superclass name ]);
 				yourself ]
-		ifFalse: [ aSpeciesMap asWebsideJson ].
+		ifFalse: [ aPowerlangSpeciesWrapper asWebsideJson ].
 	(anInteger notNil and: [ anInteger = 0 ])
 		ifTrue: [ ^ json ].
 	depth := anInteger notNil
 		ifTrue: [ anInteger - 1 ].
-	subclasses := ((self subclassesOf: aSpeciesMap)
+	subclasses := (aPowerlangSpeciesWrapper subclasses
 		sort: [ :a :b | a name <= b name ])
 		collect: [ :c | self classTreeFrom: c depth: depth ].
 	json at: 'subclasses' put: subclasses.

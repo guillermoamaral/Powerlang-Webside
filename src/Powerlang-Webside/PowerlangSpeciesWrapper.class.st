@@ -109,3 +109,9 @@ PowerlangSpeciesWrapper >> sharedPoolsString [
 				do: [ :n | s nextPutAll: n asLocalString ]
 				separatedBy: [ s space ] ]
 ]
+
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> subclasses [
+	^ super subclasses asArray wrappee slots
+		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
+]
