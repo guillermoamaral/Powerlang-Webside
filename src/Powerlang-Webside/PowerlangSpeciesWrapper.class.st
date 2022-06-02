@@ -10,6 +10,12 @@ PowerlangSpeciesWrapper >> allSubclasses [
 		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
 ]
 
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> allSuperclasses [
+	^ super allSuperclasses asArray wrappee slots
+		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
+]
+
 { #category : #converting }
 PowerlangSpeciesWrapper >> asWebsideJson [
 	^ super asWebsideJson
@@ -25,12 +31,18 @@ PowerlangSpeciesWrapper >> asWebsideJson [
 		yourself
 ]
 
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> classVarNames [
+	^ super classVarNames asArray wrappee slots
+		collect: [ :s | s asLocalString ]
+]
+
 { #category : #private }
 PowerlangSpeciesWrapper >> classVariablesString [
 	^ String
 		streamContents: [ :s | 
-			self classVarNames asArray wrappee slots
-				do: [ :n | s nextPutAll: n asLocalString ]
+			self classVarNames
+				do: [ :n | s nextPutAll: n ]
 				separatedBy: [ s space ] ]
 ]
 
@@ -78,12 +90,18 @@ PowerlangSpeciesWrapper >> definition [
 						nextPutAll: 'superclass: nil' ] ]
 ]
 
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> instVarNames [
+	^ super instVarNames asArray wrappee slots
+		collect: [ :s |  s asLocalString]
+]
+
 { #category : #private }
 PowerlangSpeciesWrapper >> instanceVariablesString [
 	^ String
 		streamContents: [ :s | 
-			self instVarNames asArray wrappee slots
-				do: [ :n | s nextPutAll: n asLocalString ]
+			self instVarNames
+				do: [ :n | s nextPutAll: n  ]
 				separatedBy: [ s space ] ]
 ]
 
@@ -114,4 +132,10 @@ PowerlangSpeciesWrapper >> sharedPoolsString [
 PowerlangSpeciesWrapper >> subclasses [
 	^ super subclasses asArray wrappee slots
 		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
+]
+
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> withAllSuperclasses [
+	^ OrderedCollection with:
+		self withAll: self allSuperclasses
 ]

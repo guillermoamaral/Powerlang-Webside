@@ -87,13 +87,13 @@ PowerlangWebsideAPI >> classTreeFrom: aPowerlangSpeciesWrapper depth: anInteger 
 	| json subclasses depth names superclass |
 	names := self queryAt: 'names'.
 	json := names = 'true'
-		ifTrue: [ 
-			superclass := aPowerlangSpeciesWrapper superclass.
-			
+		ifTrue: [ superclass := aPowerlangSpeciesWrapper superclass.
 			NeoJSONObject new
 				at: 'name' put: aPowerlangSpeciesWrapper name;
 				at: 'superclass'
-					put: (superclass = self runtime nil ifFalse: [ superclass name ]);
+					put:
+					(superclass == self runtime nil
+						ifFalse: [ superclass name ]);
 				yourself ]
 		ifFalse: [ aPowerlangSpeciesWrapper asWebsideJson ].
 	(anInteger notNil and: [ anInteger = 0 ])
@@ -114,16 +114,13 @@ PowerlangWebsideAPI >> classVariables [
 	class ifNil: [ ^ self notFound ].
 	^ class withAllSuperclasses
 		gather: [ :c | 
-			| slots |
-			slots := c classVariables slots.
-			slots isEmpty
-				ifTrue: [ #() ]
-				ifFalse: [ slots first keys slots
-						collect: [ :v | 
-							NeoJSONObject new
-								at: 'name' put: v asString;
-								at: 'class' put: c name , ' class';
-								yourself ] ] ]
+			c classVarNames asArray sort
+				collect: [ :v | 
+					NeoJSONObject new
+						at: 'name' put: v;
+						at: 'class' put: c name , ' class';
+						at: 'type' put: 'class';
+						yourself ] ]
 ]
 
 { #category : #'code endpoints' }
@@ -205,11 +202,12 @@ PowerlangWebsideAPI >> instanceVariables [
 	class ifNil: [ ^ self notFound ].
 	^ class withAllSuperclasses
 		gather: [ :c | 
-			c instanceVariables slots
+			c instVarNames
 				collect: [ :v | 
 					NeoJSONObject new
-						at: 'name' put: v asString;
+						at: 'name' put: v;
 						at: 'class' put: c name;
+						at: 'type' put: 'instance';
 						yourself ] ]
 ]
 
