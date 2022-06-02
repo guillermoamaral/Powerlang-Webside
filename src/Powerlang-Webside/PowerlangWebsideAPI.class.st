@@ -58,7 +58,7 @@ PowerlangWebsideAPI >> categories [
 	| class |
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
-	^ class instanceSpec protocols
+	^ class categories
 ]
 
 { #category : #'code endpoints' }

@@ -32,6 +32,12 @@ PowerlangSpeciesWrapper >> asWebsideJson [
 ]
 
 { #category : #inquiries }
+PowerlangSpeciesWrapper >> categories [
+	^ super categories asArray wrappee slots
+		collect: [ :c | c asLocalString  ]
+]
+
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> classVarNames [
 	^ super classVarNames asArray wrappee slots
 		collect: [ :s | s asLocalString ]
