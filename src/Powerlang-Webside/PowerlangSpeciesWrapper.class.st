@@ -141,6 +141,11 @@ PowerlangSpeciesWrapper >> subclasses [
 ]
 
 { #category : #inquiries }
+PowerlangSpeciesWrapper >> withAllSubclasses [
+	^ OrderedCollection with: self withAll: self allSubclasses
+]
+
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> withAllSuperclasses [
 	^ OrderedCollection with:
 		self withAll: self allSuperclasses

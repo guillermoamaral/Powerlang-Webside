@@ -77,9 +77,7 @@ PowerlangWebsideAPI >> classNamed: aString [
 		objectClass.
 	[ highest superclass wrappee = runtime nil ]
 		whileFalse: [ highest := highest superclass ].
-	^ highest allSubclasses
-		detect: [ :c | c name = aString ]
-		ifNone: nil
+	^ highest withAllSubclasses detect: [ :c | c name = aString ] ifNone: nil
 ]
 
 { #category : #private }
@@ -147,7 +145,7 @@ PowerlangWebsideAPI >> classes [
 
 { #category : #private }
 PowerlangWebsideAPI >> defaultRootClass [
-	^ self  classNamed: 'Object'
+	^ self classNamed: 'ProtoObject'
 ]
 
 { #category : #'code endpoints' }
