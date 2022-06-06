@@ -165,7 +165,7 @@ PowerlangWebsideAPI >> filterByCategory: aCollection [
 { #category : #private }
 PowerlangWebsideAPI >> filterByVariable: aCollection [
 	| variable class slot classVar |
-	variable := self queriedReferencing.
+	variable := self queriedAccessing.
 	variable ifNil: [ ^ aCollection ].
 	^ aCollection
 		select: [ :m | 
@@ -255,6 +255,11 @@ PowerlangWebsideAPI >> notFound [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> queriedAccessing [
+	^ self queryAt: 'accessing' 
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> queriedCategory [
 	| category |
 	category := request at: 'category' ifAbsent: nil.
@@ -269,14 +274,9 @@ PowerlangWebsideAPI >> queriedClass [
 ]
 
 { #category : #private }
-PowerlangWebsideAPI >> queriedReferencing [
-	^ self queriedReferencingClass ifNil: [ self queryAt: 'referencing' ]
-]
-
-{ #category : #private }
 PowerlangWebsideAPI >> queriedReferencingClass [
 	| name |
-	name := self queryAt: 'referencing'.
+	name := self queryAt: 'referencingClass'.
 	^ name ifNotNil: [ self classNamed: name ]
 ]
 
