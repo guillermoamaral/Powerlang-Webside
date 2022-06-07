@@ -370,7 +370,7 @@ PowerlangWebsideAPI >> sendersOf: aSymbol [
 PowerlangWebsideAPI >> sendersOf: aSymbol among: aCollection [
 	| index |
 	index := Smalltalk specialSelectorIndexOrNil: aSymbol.
-	^ self methods
+	^ aCollection
 		select: [ :m | m hasSelector: aSymbol specialSelectorIndex: index ]
 ]
 
