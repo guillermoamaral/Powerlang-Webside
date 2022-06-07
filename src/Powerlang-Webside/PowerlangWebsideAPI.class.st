@@ -281,6 +281,11 @@ PowerlangWebsideAPI >> queriedReferencingClass [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> queriedReferencingString [
+	^self queryAt: 'referencingString'
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> queriedScope [
 	| scope |
 	scope := request at: 'scope' ifAbsent: nil.
@@ -307,10 +312,25 @@ PowerlangWebsideAPI >> queryAt: aString [
 ]
 
 { #category : #private }
-PowerlangWebsideAPI >> referencesTo: aClass [
+PowerlangWebsideAPI >> referencesToClass: aClass [
 	| binding |
 	binding := Smalltalk bindingOf: aClass name asSymbol.
 	^ SystemNavigation default allReferencesTo: binding
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> referencesToString: aString [
+	| scope |
+	scope := self queriedScope ifNil: [ self queriedClass ].
+	
+		^ SystemNavigation default 
+			allMethodsSelect:  [ :m | 
+			m
+				hasLiteralSuchThat: [ :l | 
+					l isString
+						and: [ l isSymbol not
+								and: [ l includesSubstring: aString caseSensitive: false ] ] ] ]
+
 ]
 
 { #category : #accessing }
@@ -342,8 +362,16 @@ PowerlangWebsideAPI >> sendersOf: aSymbol [
 	| scope |
 	scope := self queriedScope.
 	^ scope
-		ifNotNil: [ scope sendersOf: aSymbol ]
+		ifNotNil: [ self sendersOf: aSymbol among: scope methods ]
 		ifNil: [ SystemNavigation default allSendersOf: aSymbol ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> sendersOf: aSymbol among: aCollection [
+	| index |
+	index := Smalltalk specialSelectorIndexOrNil: aSymbol.
+	^ self methods
+		select: [ :m | m hasSelector: aSymbol specialSelectorIndex: index ]
 ]
 
 { #category : #accessing }
