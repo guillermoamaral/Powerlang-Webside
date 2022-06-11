@@ -1,5 +1,8 @@
 "
 self startServer
+
+
+self allInstances
 "
 Class {
 	#name : #PowerlangWebsideAPI,
