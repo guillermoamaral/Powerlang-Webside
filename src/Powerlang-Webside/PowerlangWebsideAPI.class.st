@@ -134,16 +134,14 @@ PowerlangWebsideAPI >> classes [
 	root ifNil: [ ^ self notFound ].
 	tree := self queryAt: 'tree'.
 	tree = 'true'
-		ifTrue: [ depth := self queryAt: 'depth'.
-			depth notNil
-				ifTrue: [ depth := depth asInteger ].
+		ifTrue: [ depth := self queryAt: 'depth' ifPresent: [:d | d asInteger ].
 			json := self classTreeFrom: root depth: depth.
 			^ Array with: json ].
 	classes := Array with: root withAll: root allSubclasses.
 	names := self queryAt: 'names'.
 	names = 'true'
-		ifTrue: [ ^ (classes collect: [:c | c name]) sort ].
-	^ classes collect: [:c | c asWebsideJson]
+		ifTrue: [ ^ (classes collect: [ :c | c name ]) sort ].
+	^ classes collect: [ :c | c asWebsideJson ]
 ]
 
 { #category : #private }
@@ -278,9 +276,7 @@ PowerlangWebsideAPI >> queriedClass [
 
 { #category : #private }
 PowerlangWebsideAPI >> queriedReferencingClass [
-	| name |
-	name := self queryAt: 'referencingClass'.
-	^ name ifNotNil: [ self classNamed: name ]
+	^self queryAt: 'referencingClass' ifPresent: [:n | self classNamed: n ]
 ]
 
 { #category : #private }
@@ -311,7 +307,27 @@ PowerlangWebsideAPI >> queriedSending [
 
 { #category : #private }
 PowerlangWebsideAPI >> queryAt: aString [
-	^request at: aString ifAbsent: nil
+	^ self queryAt: aString ifAbsent: nil
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> queryAt: aString ifAbsent: aBlock [
+	^ self queryAt: aString ifPresent: nil ifAbsent: aBlock
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> queryAt: aString ifPresent: aBlock [
+	^ self queryAt: aString ifPresent: aBlock ifAbsent: nil
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> queryAt: aString ifPresent: aBlock ifAbsent: anotherBlock [
+	| value |
+	value := request at: aString ifAbsent: nil.
+	value ifNil: [ ^ anotherBlock value ].
+	^ aBlock notNil
+		ifTrue: [ aBlock evaluateWith: value ]
+		ifFalse: [ value ]
 ]
 
 { #category : #private }
