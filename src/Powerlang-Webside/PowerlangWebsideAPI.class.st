@@ -66,6 +66,7 @@ PowerlangWebsideAPI >> categories [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> classDefinition [
+
 	| class |
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
@@ -86,7 +87,7 @@ PowerlangWebsideAPI >> classNamed: aString [
 	[ root superclass wrappee == runtime nil ] whileFalse: [ 
 		root := root superclass ].
 	class := root withAllSubclasses
-		         detect: [ :c | c name = aString ]
+		         detect: [ :c | c name = name ]
 		         ifNone: [ ^ nil ].
 	^ metaclass
 		  ifTrue: [ class class ]
@@ -335,12 +336,13 @@ PowerlangWebsideAPI >> queryAt: aString ifPresent: aBlock [
 
 { #category : #private }
 PowerlangWebsideAPI >> queryAt: aString ifPresent: aBlock ifAbsent: anotherBlock [
+
 	| value |
 	value := request at: aString ifAbsent: nil.
 	value ifNil: [ ^ anotherBlock value ].
 	^ aBlock notNil
-		ifTrue: [ aBlock evaluateWith: value ]
-		ifFalse: [ value ]
+		  ifTrue: [ aBlock value: value ]
+		  ifFalse: [ value ]
 ]
 
 { #category : #private }
@@ -410,6 +412,15 @@ PowerlangWebsideAPI >> sendersOf: aSymbol among: aCollection [
 { #category : #accessing }
 PowerlangWebsideAPI >> server: aWebsideServer [
 	server := aWebsideServer
+]
+
+{ #category : #'code endpoints' }
+PowerlangWebsideAPI >> subclasses [
+
+	| class |
+	class := self requestedClass.
+	class ifNil: [ ^ self notFound ].
+	^ class subclasses collect: [ :c | c asWebsideJson ]
 ]
 
 { #category : #private }

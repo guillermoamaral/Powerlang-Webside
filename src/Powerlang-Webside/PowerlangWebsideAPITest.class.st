@@ -19,14 +19,17 @@ PowerlangWebsideAPITest class >> defaultTimeLimit [
 
 { #category : #initialization }
 PowerlangWebsideAPITest class >> initializeCache [
+	"
+	self initializeCache 
+	"
 
 	Cache := (PowertalkRingImage fromSpec
-			            wordSize: 8;
-			            genesis;
-			            bootstrap;
-			            fillClasses;
-			            fillSymbols;
-			            generateLMR) result
+		          wordSize: 8;
+		          genesis;
+		          bootstrap;
+		          fillClasses;
+		          fillSymbols;
+		          generateLMR) result
 ]
 
 { #category : #private }
@@ -1198,7 +1201,7 @@ PowerlangWebsideAPITest >> testSubclasses [
 	| subclasses |
 	subclasses := self get: 'classes/Magnitude/subclasses'.
 	self
-		assert: (subclasses anySatisfy: [ :c | c name = 'Time' ]);
+		assert: (subclasses anySatisfy: [ :c | c name = 'Character' ]);
 		assert: (subclasses anySatisfy: [ :c | c name = 'Number' ])
 ]
 
