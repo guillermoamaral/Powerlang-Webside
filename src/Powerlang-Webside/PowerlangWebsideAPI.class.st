@@ -82,10 +82,9 @@ PowerlangWebsideAPI >> classNamed: aString [
 	runtime := self runtime.
 	root := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
 		        objectClass.
-		root inspect.
-	[ root superclass wrappee = runtime nil ] whileFalse: [ 
-		root := root superclass ].
 
+	[ root superclass wrappee == runtime nil ] whileFalse: [ 
+		root := root superclass ].
 	class := root withAllSubclasses
 		         detect: [ :c | c name = aString ]
 		         ifNone: [ ^ nil ].
@@ -225,14 +224,16 @@ PowerlangWebsideAPI >> instanceVariables [
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> method [
 
-	| class selector |
+	| class selector symbol |
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
 	selector := self requestedSelector.
 	selector ifNil: [ ^ self notFound ].
-	(class includesSelector: selector) ifFalse: [ ^ self notFound ].
-	Transcript show: 'yes'.
-	^ (class >> selector) asWebsideJson
+	symbol := self runtime symbolFromLocal: selector.
+	self halt.
+	(class includesSelector: symbol) asLocalObject ifFalse: [ 
+		^ self notFound ].
+	^ (class >> symbol) asWebsideJson
 ]
 
 { #category : #'code endpoints' }

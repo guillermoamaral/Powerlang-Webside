@@ -14,6 +14,17 @@ PowerlangObjectWrapper class >> on: anLMRObject runtime: aPowerlangLMR [
 ]
 
 { #category : #converting }
+PowerlangObjectWrapper >> asLocalObject [
+	wrappee == runtime nil ifTrue: [ ^nil ].
+	wrappee == runtime true ifTrue: [ ^true ].
+	wrappee == runtime false ifTrue: [ ^false ].
+	wrappee class == LMRSmallInteger ifTrue: [ ^wrappee value ].
+	wrappee class == LMRByteObject ifTrue: [ ^wrappee asLocalString ].
+	self error: 'Cannot determine local equivalent of ', wrappee printString.
+	^nil
+]
+
+{ #category : #converting }
 PowerlangObjectWrapper >> asWebsideJson [
 	| variable |
 	variable := self objectClass isVariable wrappee = runtime true.
@@ -27,6 +38,12 @@ PowerlangObjectWrapper >> asWebsideJson [
 				ifFalse: [ 0 ]);
 		at: 'printString' put: self printString;
 		yourself
+]
+
+{ #category : #printing }
+PowerlangObjectWrapper >> displayString [
+
+	^ self printString
 ]
 
 { #category : #accessing }
@@ -48,7 +65,13 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 { #category : #inspecting }
 PowerlangObjectWrapper >> inspect [
 
-	^ Smalltalk tools inspector inspect: self
+	^ wrappee inspect
+]
+
+{ #category : #testing }
+PowerlangObjectWrapper >> isKindOf: aClass [
+
+	^ self class == aClass or: [ self class inheritsFrom: aClass ]
 ]
 
 { #category : #testing }
@@ -80,9 +103,21 @@ PowerlangObjectWrapper >> printString [
 	^ String streamContents: [ :strm | self printOn: strm ]
 ]
 
+{ #category : #testing }
+PowerlangObjectWrapper >> respondsTo: aSymbol [
+
+	^ self class canUnderstand: aSymbol
+]
+
 { #category : #accessing }
 PowerlangObjectWrapper >> runtime: aPowerlangLMR [
 	runtime := aPowerlangLMR
+]
+
+{ #category : #printing }
+PowerlangObjectWrapper >> stDisplayString [
+
+	^ self printString
 ]
 
 { #category : #accessing }

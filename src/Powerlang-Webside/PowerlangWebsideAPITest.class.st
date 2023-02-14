@@ -8,6 +8,12 @@ Class {
 	#category : #'Powerlang-Webside-Tests'
 }
 
+{ #category : #accessing }
+PowerlangWebsideAPITest class >> defaultTimeLimit [
+
+	^ 100 seconds
+]
+
 { #category : #private }
 PowerlangWebsideAPITest >> delete: uri [
 	| data |

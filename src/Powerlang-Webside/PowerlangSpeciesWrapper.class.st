@@ -5,6 +5,14 @@ Class {
 }
 
 { #category : #inquiries }
+PowerlangSpeciesWrapper >> >> symbol [
+
+	^ PowerlangMethodWrapper
+		  on: (super >> symbol) wrappee
+		  runtime: runtime
+]
+
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> allSubclasses [
 	^ super allSubclasses asArray wrappee slots
 		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
@@ -135,12 +143,6 @@ PowerlangSpeciesWrapper >> sharedPoolsString [
 PowerlangSpeciesWrapper >> subclasses [
 	^ super subclasses asArray wrappee slots
 		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
-]
-
-{ #category : #inquiries }
-PowerlangSpeciesWrapper >> superclass [
-
-	^PowerlangSpeciesWrapper on: super superclass runtime: runtime
 ]
 
 { #category : #inquiries }
