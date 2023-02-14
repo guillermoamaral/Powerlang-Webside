@@ -5,6 +5,9 @@ Class {
 		'server',
 		'client'
 	],
+	#classVars : [
+		'Cache'
+	],
 	#category : #'Powerlang-Webside-Tests'
 }
 
@@ -12,6 +15,18 @@ Class {
 PowerlangWebsideAPITest class >> defaultTimeLimit [
 
 	^ 100 seconds
+]
+
+{ #category : #initialization }
+PowerlangWebsideAPITest class >> initializeCache [
+
+	Cache := (PowertalkRingImage fromSpec
+			            wordSize: 8;
+			            genesis;
+			            bootstrap;
+			            fillClasses;
+			            fillSymbols;
+			            generateLMR) result
 ]
 
 { #category : #private }
@@ -48,21 +63,23 @@ PowerlangWebsideAPITest >> post: uri with: body [
 
 { #category : #running }
 PowerlangWebsideAPITest >> setUp [
-	| bootstrapper |
+
+	| runtime |
 	super setUp.
-	bootstrapper := PowertalkRingImage fromSpec
-		wordSize: 8;
-		genesis;
-		bootstrap;
-		fillClasses;
-		fillSymbols;
-		generateLMR.
+	runtime := Cache ifNil: [( 
+		                PowertalkRingImage fromSpec
+			                wordSize: 8;
+			                genesis;
+			                bootstrap;
+			                fillClasses;
+			                fillSymbols;
+			                generateLMR) result].
 	server := WebsideServer new.
 	server
 		apiClass: PowerlangWebsideAPI;
 		baseUri: '/websideapitest';
 		port: 9999;
-		resourcesAt: #runtime put: bootstrapper result;
+		resourcesAt: #runtime put: runtime;
 		start.
 	client := ZnClient new accept: ZnMimeType applicationJson
 ]

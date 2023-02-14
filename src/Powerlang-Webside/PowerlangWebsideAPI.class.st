@@ -230,7 +230,6 @@ PowerlangWebsideAPI >> method [
 	selector := self requestedSelector.
 	selector ifNil: [ ^ self notFound ].
 	symbol := self runtime symbolFromLocal: selector.
-	self halt.
 	(class includesSelector: symbol) asLocalObject ifFalse: [ 
 		^ self notFound ].
 	^ (class >> symbol) asWebsideJson
