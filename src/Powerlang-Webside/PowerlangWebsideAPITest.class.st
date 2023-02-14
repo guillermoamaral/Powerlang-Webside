@@ -17,17 +17,14 @@ PowerlangWebsideAPITest >> delete: uri [
 
 { #category : #private }
 PowerlangWebsideAPITest >> get: uri [
+
 	| url data |
 	url := server baseUrl asString.
-	(uri beginsWith: '/')
-		ifFalse: [ url := url , '/' ].
+	(uri beginsWith: '/') ifFalse: [ url := url , '/' ].
 	url := url , uri.
 	data := client get: url.
-	client isNotFound
-		ifTrue: [ ^ nil ].
-			client isSuccess
-		ifFalse: [ self error: client contents asString ].
-
+	client isNotFound ifTrue: [ ^ nil ].
+	client isSuccess ifFalse: [ self error: client contents asString ].
 	^ data ifNotNil: [ NeoJSONObject fromString: data ]
 ]
 
@@ -582,9 +579,10 @@ PowerlangWebsideAPITest >> testDebuggerFrames [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPITest >> testDialect [
+
 	| dialect |
 	dialect := self get: 'dialect'.
-	self assert: dialect equals: 'Powerlang-Ring'
+	self assert: dialect equals: 'Powerlang'
 ]
 
 { #category : #'evaluation  endpoints' }
@@ -631,17 +629,20 @@ PowerlangWebsideAPITest >> testFrameBindings [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPITest >> testImplementors [
+
 	| implementors local |
 	implementors := self get: 'methods?selector=reciprocal'.
 	self
 		assert: implementors notEmpty;
-		assert: (implementors allSatisfy: [ :m | m selector = 'reciprocal' ]);
-		assert: (implementors anySatisfy: [ :m | (m at: 'class') = 'Fraction' ]).
+		assert:
+			(implementors allSatisfy: [ :m | m selector = 'reciprocal' ]);
+		assert:
+			(implementors anySatisfy: [ :m | (m at: 'methodClass') = 'Fraction' ]).
 	local := self get: 'methods?selector=reciprocal&class=Fraction'.
 	self
 		assert: local notEmpty;
 		assert: (local allSatisfy: [ :m | m selector = 'reciprocal' ]);
-		assert: (local allSatisfy: [ :m | (m at: 'class') = 'Fraction' ])
+		assert: (local allSatisfy: [ :m | (m at: 'methodClass') = 'Fraction' ])
 ]
 
 { #category : #'changes endpoints' }

@@ -74,13 +74,24 @@ PowerlangWebsideAPI >> classDefinition [
 
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
-	| runtime highest |
+
+	| name metaclass runtime root class |
+	name := aString.
+	metaclass := name endsWith: ' class'.
+	metaclass ifTrue: [ name := name withoutSuffix: ' class' ].
 	runtime := self runtime.
-	highest := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
-		objectClass.
-	[ highest superclass wrappee = runtime nil ]
-		whileFalse: [ highest := highest superclass ].
-	^ highest withAllSubclasses detect: [ :c | c name = aString ] ifNone: nil
+	root := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
+		        objectClass.
+		root inspect.
+	[ root superclass wrappee = runtime nil ] whileFalse: [ 
+		root := root superclass ].
+
+	class := root withAllSubclasses
+		         detect: [ :c | c name = aString ]
+		         ifNone: [ ^ nil ].
+	^ metaclass
+		  ifTrue: [ class class ]
+		  ifFalse: [ class ]
 ]
 
 { #category : #private }
@@ -126,21 +137,21 @@ PowerlangWebsideAPI >> classVariables [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> classes [
+
 	| root tree classes names depth json |
 	root := self queryAt: 'root'.
 	root := root notNil
-		ifTrue: [ self classNamed: root ]
-		ifFalse: [ self defaultRootClass ].
+		        ifTrue: [ self classNamed: root ]
+		        ifFalse: [ self defaultRootClass ].
 	root ifNil: [ ^ self notFound ].
 	tree := self queryAt: 'tree'.
-	tree = 'true'
-		ifTrue: [ depth := self queryAt: 'depth' ifPresent: [:d | d asInteger ].
-			json := self classTreeFrom: root depth: depth.
-			^ Array with: json ].
+	tree = 'true' ifTrue: [ 
+		depth := self queryAt: 'depth' ifPresent: [ :d | d asInteger ].
+		json := self classTreeFrom: root depth: depth.
+		^ Array with: json ].
 	classes := Array with: root withAll: root allSubclasses.
 	names := self queryAt: 'names'.
-	names = 'true'
-		ifTrue: [ ^ (classes collect: [ :c | c name ]) sort ].
+	names = 'true' ifTrue: [ ^ (classes collect: [ :c | c name ]) sort ].
 	^ classes collect: [ :c | c asWebsideJson ]
 ]
 
@@ -151,6 +162,7 @@ PowerlangWebsideAPI >> defaultRootClass [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> dialect [
+
 	^ 'Powerlang'
 ]
 
@@ -212,13 +224,14 @@ PowerlangWebsideAPI >> instanceVariables [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> method [
+
 	| class selector |
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
 	selector := self requestedSelector.
 	selector ifNil: [ ^ self notFound ].
-	(class includesSelector: selector)
-		ifFalse: [ ^ self notFound ].
+	(class includesSelector: selector) ifFalse: [ ^ self notFound ].
+	Transcript show: 'yes'.
 	^ (class >> selector) asWebsideJson
 ]
 
@@ -366,6 +379,7 @@ PowerlangWebsideAPI >> requestedClass [
 
 { #category : #private }
 PowerlangWebsideAPI >> requestedSelector [
+
 	| selector |
 	selector := self urlAt: 'selector'.
 	^ selector ifNotNil: [ selector asSymbol ]

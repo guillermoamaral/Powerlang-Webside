@@ -45,9 +45,10 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 	^ class on: result runtime: runtime
 ]
 
-{ #category : #accessing }
+{ #category : #inspecting }
 PowerlangObjectWrapper >> inspect [
-	^wrappee inspect
+
+	^ Smalltalk tools inspector inspect: self
 ]
 
 { #category : #testing }
