@@ -76,16 +76,11 @@ PowerlangWebsideAPI >> classDefinition [
 { #category : #private }
 PowerlangWebsideAPI >> classNamed: aString [
 
-	| name metaclass runtime root class |
+	| name metaclass root class |
 	name := aString.
 	metaclass := name endsWith: ' class'.
 	metaclass ifTrue: [ name := name withoutSuffix: ' class' ].
-	runtime := self runtime.
-	root := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
-		        objectClass.
-
-	[ root superclass wrappee == runtime nil ] whileFalse: [ 
-		root := root superclass ].
+	root := self defaultRootClass.
 	class := root withAllSubclasses
 		         detect: [ :c | c name = name ]
 		         ifNone: [ ^ nil ].
@@ -157,7 +152,14 @@ PowerlangWebsideAPI >> classes [
 
 { #category : #private }
 PowerlangWebsideAPI >> defaultRootClass [
-	^ self classNamed: 'ProtoObject'
+
+	| runtime root |
+	runtime := self runtime.
+	root := (PowerlangObjectWrapper on: runtime nil runtime: runtime)
+		        objectClass.
+	[ root superclass wrappee == runtime nil ] whileFalse: [ 
+		root := root superclass ].
+	^ root
 ]
 
 { #category : #'code endpoints' }
@@ -199,11 +201,14 @@ PowerlangWebsideAPI >> image [
 
 { #category : #private }
 PowerlangWebsideAPI >> implementorsOf: aSymbol [
-	| scope |
+	| scope root |
 	scope := self queriedScope.
-	^ scope
-		ifNotNil: [ scope implementorsOf: aSymbol ]
-		ifNil: [ SystemNavigation default allImplementorsOf: aSymbol ]
+	scope
+		ifNotNil: [ self halt. ^scope implementorsOf: aSymbol].
+	root := self defaultRootClass.
+	^root withAllSubclasses
+		  select: [ :class | class includesSelector: aSymbol ]
+		  thenCollect: [ :class | class >> aSymbol ]
 ]
 
 { #category : #'code endpoints' }
@@ -230,35 +235,33 @@ PowerlangWebsideAPI >> method [
 	class ifNil: [ ^ self notFound ].
 	selector := self requestedSelector.
 	selector ifNil: [ ^ self notFound ].
-	symbol := self runtime symbolFromLocal: selector.
-	(class includesSelector: symbol) asLocalObject ifFalse: [ 
-		^ self notFound ].
-	^ (class >> symbol) asWebsideJson
+	(class includesSelector: selector) ifFalse: [ ^ self notFound ].
+	^ (class >> selector) asWebsideJson
 ]
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> methods [
+
 	| selector methods senders global references class |
 	selector := self queriedSelector.
-	selector notNil
-		ifTrue: [ methods := self implementorsOf: selector ].
+	selector notNil ifTrue: [ methods := self implementorsOf: selector ].
 	selector := self queriedSending.
-	selector notNil
-		ifTrue: [ senders := self sendersOf: selector.
-			methods := methods
-				ifNil: [ senders ]
-				ifNotNil: [ methods intersection: senders ] ].
+	selector notNil ifTrue: [ 
+		senders := self sendersOf: selector.
+		methods := methods
+			           ifNil: [ senders ]
+			           ifNotNil: [ methods intersection: senders ] ].
 	global := self queriedReferencingClass.
-	global notNil
-		ifTrue: [ references := self referencesTo: global.
-			methods := methods
-				ifNil: [ references ]
-				ifNotNil: [ methods intersection: references ] ].
+	global notNil ifTrue: [ 
+		references := self referencesTo: global.
+		methods := methods
+			           ifNil: [ references ]
+			           ifNotNil: [ methods intersection: references ] ].
 	class := self requestedClass ifNil: [ self queriedClass ].
-	(class notNil and: [ methods notNil ])
-		ifTrue: [ methods := methods select: [ :m | m methodClass == class ] ].
-	methods
-		ifNil: [ methods := (class ifNil: [ self defaultRootClass ]) methods ].
+	(class notNil and: [ methods notNil ]) ifTrue: [ 
+		methods := methods select: [ :m | m classBinding = class ] ].
+	methods ifNil: [ 
+		methods := (class ifNil: [ self defaultRootClass ]) methods ].
 	methods := self filterByCategory: methods.
 	methods := self filterByVariable: methods.
 	^ methods collect: [ :m | m asWebsideJson ]
@@ -394,11 +397,13 @@ PowerlangWebsideAPI >> runtime [
 
 { #category : #private }
 PowerlangWebsideAPI >> sendersOf: aSymbol [
+
 	| scope |
 	scope := self queriedScope.
-	^ scope
-		ifNotNil: [ self sendersOf: aSymbol among: scope methods ]
-		ifNil: [ SystemNavigation default allSendersOf: aSymbol ]
+	scope ifNotNil: [ 
+		self halt.
+		^ self sendersOf: aSymbol among: scope methods ].
+	^ self defaultRootClass withAllSubclasses gather: [ :class | self halt ]
 ]
 
 { #category : #private }

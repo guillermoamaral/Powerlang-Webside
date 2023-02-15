@@ -13,6 +13,16 @@ PowerlangObjectWrapper class >> on: anLMRObject runtime: aPowerlangLMR [
 ^self new wrappee: anLMRObject ; runtime: aPowerlangLMR 
 ]
 
+{ #category : #comparing }
+PowerlangObjectWrapper >> = anObject [
+
+	| object  |
+	object := (anObject isKindOf: PowerlangObjectWrapper)
+		          ifTrue: [ anObject wrappee ]
+		          ifFalse: [ anObject ].
+	^ wrappee = object
+]
+
 { #category : #converting }
 PowerlangObjectWrapper >> asLocalObject [
 	wrappee == runtime nil ifTrue: [ ^nil ].
@@ -60,6 +70,11 @@ PowerlangObjectWrapper >> doesNotUnderstand: aMessage [
 		ifTrue: [ PowerlangSpeciesWrapper ]
 		ifFalse: [ PowerlangObjectWrapper ].
 	^ class on: result runtime: runtime
+]
+
+{ #category : #comparing }
+PowerlangObjectWrapper >> hash [
+	^wrappee hash
 ]
 
 { #category : #inspecting }

@@ -5,8 +5,10 @@ Class {
 }
 
 { #category : #inquiries }
-PowerlangSpeciesWrapper >> >> symbol [
-
+PowerlangSpeciesWrapper >> >> aSymbol [
+	
+	| symbol |
+	symbol := runtime symbolFromLocal: aSymbol.
 	^ PowerlangMethodWrapper
 		  on: (super >> symbol) wrappee
 		  runtime: runtime
@@ -102,6 +104,13 @@ PowerlangSpeciesWrapper >> definition [
 				  nextPutAll: self name;
 				  space;
 				  nextPutAll: 'superclass: nil' ] ]
+]
+
+{ #category : #testing }
+PowerlangSpeciesWrapper >> includesSelector: aSymbol [
+	| symbol |
+	symbol := runtime symbolFromLocal: aSymbol.
+	^(super includesSelector: symbol) asLocalObject
 ]
 
 { #category : #inquiries }

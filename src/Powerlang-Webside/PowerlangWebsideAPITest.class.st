@@ -199,14 +199,13 @@ PowerlangWebsideAPITest >> testCassDefinition [
 
 { #category : #'code endpoints' }
 PowerlangWebsideAPITest >> testCategories [
+
 	| categories |
-	categories := self get: 'classes/Point/categories'.
+	categories := self get: 'classes/Number/categories'.
 	self
 		assert: categories notEmpty;
 		assert: (categories allSatisfy: #isString);
 		assert: (categories includes: 'arithmetic')
-		
-  
 ]
 
 { #category : #'changes endpoints' }
