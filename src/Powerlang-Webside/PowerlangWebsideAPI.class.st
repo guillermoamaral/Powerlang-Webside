@@ -27,24 +27,25 @@ PowerlangWebsideAPI class >> new [
 
 { #category : #services }
 PowerlangWebsideAPI class >> startServer [
+
 	"
 	self startServer
 	"
 
-	| bootstrapper |
-	bootstrapper := PowertalkRingImage fromSpec
-		wordSize: 8;
-		genesis;
-		bootstrap;
-		fillClasses;
-		fillSymbols;
-		generateLMR.
+	| runtime |
+	runtime := (PowertalkRingImage fromSpec
+		            wordSize: 8;
+		            genesis;
+		            bootstrap;
+		            fillClasses;
+		            fillSymbols;
+		            generateLMR) result.
 	^ WebsideServer new
-		apiClass: PowerlangWebsideAPI;
-		baseUri: '/powerlang';
-		port: 9002;
-		resourcesAt: #runtime put: bootstrapper result;
-		start
+		  apiClass: PowerlangWebsideAPI;
+		  baseUri: '/powerlang';
+		  port: 9010;
+		  resourcesAt: #runtime put: runtime;
+		  start
 ]
 
 { #category : #services }
@@ -60,7 +61,6 @@ PowerlangWebsideAPI class >> stopServer [
 PowerlangWebsideAPI >> addChange [
 
 	| change author |
-	self halt.
 	change := self requestedChange.
 	change ifNil: [ ^ self badRequest: 'Change not supported' ].
 	author := self bodyAt: 'author' ifAbsent: [ 'Unknown' ].
@@ -73,10 +73,13 @@ PowerlangWebsideAPI >> addChange [
 
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> addMethod: change [
-	| class |
+
+	| class method |
+	self halt.
 	class := self classNamed: (change at: 'className').
 	class isNil ifTrue: [ self error: 'Unexisting class' ].
-	self runtime halt
+	method := RGMethodDefinition new sourceCode: (change at: 'sourceCode').
+	self runtime bootstrapper createNewMethod: method in: class
 ]
 
 { #category : #private }
