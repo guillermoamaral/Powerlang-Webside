@@ -74,15 +74,19 @@ PowerlangWebsideAPI >> addChange [
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> addMethod: change [
 
-	| class method |
-	self halt.
+	| class method cm selector |
 	class := self classNamed: (change at: 'className').
-	class isNil ifTrue: [ self error: 'Unexisting class' ].
-	method := RGMethodDefinition new sourceCode: (change at: 'sourceCode').
-	self runtime bootstrapper createNewMethod: method in: class
+	class ifNil: [ self error: 'Unexisting class' ].
+	method := RGMethodDefinition new sourceCode:
+		          (change at: 'sourceCode').
+	cm := self runtime bootstrapper
+		      createNewMethod: method
+		      in: class wrappee.
+	selector := self runtime sendLocal: #selector to: cm.
+	change at: 'selector' put: selector asLocalString
 ]
 
-{ #category : #private }
+{ #category : #'private - changes' }
 PowerlangWebsideAPI >> applyChange: change [
 	(change at: 'type') = 'AddMethod' ifTrue: [ ^self addMethod: change ].
 	self error: 'Change not supported'
@@ -188,6 +192,22 @@ PowerlangWebsideAPI >> classes [
 	names := self queryAt: 'names'.
 	names = 'true' ifTrue: [ ^ (classes collect: [ :c | c name ]) sort ].
 	^ classes collect: [ :c | c asWebsideJson ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> compilationError: error [
+
+	| entity json suggestions |
+	json := error asWebsideJson.
+	(error isKindOf: OCUndeclaredVariableWarning) ifTrue: [ 
+		suggestions := self declareVariableSuggestionsFrom: error.
+		suggestions ifNotNil: [ json at: 'suggestions' put: suggestions ] ].
+	entity := ZnStringEntity
+		          with: (NeoJSONWriter toString: json)
+		          type: (ZnMimeType applicationJson
+				           charSet: 'utf-8';
+				           yourself).
+	^ (ZnResponse statusCode: 409) entity: entity
 ]
 
 { #category : #private }
