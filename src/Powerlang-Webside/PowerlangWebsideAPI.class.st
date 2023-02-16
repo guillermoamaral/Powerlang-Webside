@@ -56,6 +56,43 @@ PowerlangWebsideAPI class >> stopServer [
 	WebsideServer allInstances do: #stop
 ]
 
+{ #category : #'changes endpoints' }
+PowerlangWebsideAPI >> addChange [
+
+	| change author |
+	self halt.
+	change := self requestedChange.
+	change ifNil: [ ^ self badRequest: 'Change not supported' ].
+	author := self bodyAt: 'author' ifAbsent: [ 'Unknown' ].
+	[ self applyChange: change ]
+		on: Error , SyntaxErrorNotification , OCUndeclaredVariableWarning
+		do: [ :e | ^ self compilationError: e ].
+	server changes add: change.
+	^ change asWebsideJson
+]
+
+{ #category : #'private - changes' }
+PowerlangWebsideAPI >> addMethod: change [
+	| class |
+	class := self classNamed: (change at: 'className').
+	class isNil ifTrue: [ self error: 'Unexisting class' ].
+	self runtime halt
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> applyChange: change [
+	(change at: 'type') = 'AddMethod' ifTrue: [ ^self addMethod: change ].
+	self error: 'Change not supported'
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> bodyAt: aString ifAbsent: aBlock [
+
+	| json |
+	json := NeoJSONReader fromString: request entity.
+	^ json at: aString ifAbsent: aBlock
+]
+
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> categories [
 	| class |
@@ -373,6 +410,12 @@ PowerlangWebsideAPI >> referencesToString: aString [
 { #category : #accessing }
 PowerlangWebsideAPI >> request: aTeaRequest [
 	request := aTeaRequest
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> requestedChange [
+
+	^NeoJSONReader fromString: request entity
 ]
 
 { #category : #private }
