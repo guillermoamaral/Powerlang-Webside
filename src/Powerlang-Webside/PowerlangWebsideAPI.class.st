@@ -72,24 +72,38 @@ PowerlangWebsideAPI >> addChange [
 ]
 
 { #category : #'private - changes' }
-PowerlangWebsideAPI >> addMethod: change [
+PowerlangWebsideAPI >> applyAddClassChange: aRBAddClassChange [
+]
+
+{ #category : #'private - changes' }
+PowerlangWebsideAPI >> applyAddMethodChange: aRBAddMethodChange [
 
 	| class method cm selector |
-	class := self classNamed: (change at: 'className').
+	class := self classNamed: aRBAddMethodChange changeClassName.
 	class ifNil: [ self error: 'Unexisting class' ].
 	method := RGMethodDefinition new sourceCode:
-		          (change at: 'sourceCode').
+		          aRBAddMethodChange source.
 	cm := self runtime bootstrapper
 		      createNewMethod: method
 		      in: class wrappee.
-	selector := self runtime sendLocal: #selector to: cm.
-	change at: 'selector' put: selector asLocalString
+	selector := self runtime sendLocal: #selector to: cm
 ]
 
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> applyChange: change [
-	(change at: 'type') = 'AddMethod' ifTrue: [ ^self addMethod: change ].
+
+	(change isKindOf: RBAddClassChange) ifTrue: [ 
+		^ self applyAddClassChange: change ].
+	(change isKindOf: RBAddMethodChange) ifTrue: [ 
+		^ self applyAddMethodChange: change ].
+	(change isKindOf: RBRemoveMethodChange) ifTrue: [ 
+		^ self applyRemoveMethodChange: change ].
 	self error: 'Change not supported'
+]
+
+{ #category : #'private - changes' }
+PowerlangWebsideAPI >> applyRemoveMethodChange: aRBRemoveMethodChange [
+	self halt.
 ]
 
 { #category : #private }
@@ -438,7 +452,11 @@ PowerlangWebsideAPI >> request: aTeaRequest [
 { #category : #private }
 PowerlangWebsideAPI >> requestedChange [
 
-	^NeoJSONReader fromString: request entity
+	| json change |
+	json := NeoJSONReader fromString: request entity.
+	change := RBRefactoryChange fromWebsideJson: json.
+	change ifNil: [ change := RBRefactoring fromWebsideJson: json ].
+	^ change
 ]
 
 { #category : #private }
