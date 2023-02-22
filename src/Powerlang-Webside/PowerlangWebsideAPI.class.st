@@ -73,17 +73,18 @@ PowerlangWebsideAPI >> addChange [
 
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> applyAddClassChange: aRBAddClassChange [
+self halt.
+	
 ]
 
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> applyAddMethodChange: aRBAddMethodChange [
 
-	| class method  |
+	| class |
+	self halt.
 	class := self classNamed: aRBAddMethodChange changeClassName.
 	class ifNil: [ self error: 'Unexisting class' ].
-	method := RGMethodDefinition new sourceCode:
-		          aRBAddMethodChange source.
-	self runtime bootstrapper createNewMethod: method in: class wrappee
+	class compile: aRBAddMethodChange source
 ]
 
 { #category : #'private - changes' }
@@ -101,6 +102,11 @@ PowerlangWebsideAPI >> applyChange: change [
 { #category : #'private - changes' }
 PowerlangWebsideAPI >> applyRemoveMethodChange: aRBRemoveMethodChange [
 
+	| class |
+	self halt.
+	class := self classNamed: aRBRemoveMethodChange changeClassName.
+	class ifNil: [ self error: 'Unexisting class' ].
+	class removeSelector: aRBRemoveMethodChange selector
 ]
 
 { #category : #private }

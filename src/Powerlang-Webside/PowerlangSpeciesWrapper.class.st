@@ -67,6 +67,37 @@ PowerlangSpeciesWrapper >> comment [
 	^ super comment wrappee asLocalString
 ]
 
+{ #category : #services }
+PowerlangSpeciesWrapper >> compile: aString [
+
+	| kernel name class method size transferred astcodes selector format code md |
+	method := SCompiler new compile: aString.
+	size := runtime newInteger: method size.
+	kernel := runtime sendLocal: #namespace to: runtime kernel.
+	name := runtime symbolFromLocal: #CompiledMethod.
+	class := runtime sendLocal: #at: to: kernel with: { name }.
+	transferred := runtime sendLocal: #new: to: class with: { size }.
+	astcodes := runtime newByteArray: method astcodes.
+	selector := runtime addSymbol: method selector.
+	format := runtime newInteger: method format.
+	code := runtime newString: method source.
+	runtime
+		sendLocal: #astcodes: to: transferred with: { astcodes };
+		sendLocal: #classBinding: to: transferred with: { wrappee };
+		sendLocal: #selector: to: transferred with: { selector };
+		sendLocal: #format: to: transferred with: { format };
+		sendLocal: #sourceObject: to: transferred with: { code }.
+	method withIndexDo: [ :literal :i | 
+		| tliteral |
+		tliteral := runtime transferLiteral: literal.
+		transferred at: i put: tliteral ].
+	md := runtime sendLocal: #methodDictionary to: wrappee.
+	runtime sendLocal: #at:put: to: md with: { 
+			selector.
+			transferred }.
+	^ transferred
+]
+
 { #category : #inquiries }
 PowerlangSpeciesWrapper >> definition [
 
@@ -140,6 +171,14 @@ PowerlangSpeciesWrapper >> methods [
 { #category : #inquiries }
 PowerlangSpeciesWrapper >> name [
 	^super name wrappee asLocalString
+]
+
+{ #category : #services }
+PowerlangSpeciesWrapper >> removeSelector: aSymbol [
+
+	| symbol |
+	symbol := runtime symbolFromLocal: aSymbol.
+	super removeSelector: symbol
 ]
 
 { #category : #private }
