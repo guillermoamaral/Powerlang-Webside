@@ -70,32 +70,32 @@ PowerlangSpeciesWrapper >> comment [
 { #category : #services }
 PowerlangSpeciesWrapper >> compile: aString [
 
-	| kernel name class method size transferred astcodes selector format code md |
-	method := SCompiler new compile: aString.
-	size := runtime newInteger: method size.
+	| local size kernel name class method astcodes selector format code md |
+	local := SCompiler new compile: aString.
+	size := runtime newInteger: local size.
 	kernel := runtime sendLocal: #namespace to: runtime kernel.
 	name := runtime symbolFromLocal: #CompiledMethod.
 	class := runtime sendLocal: #at: to: kernel with: { name }.
-	transferred := runtime sendLocal: #new: to: class with: { size }.
-	astcodes := runtime newByteArray: method astcodes.
-	selector := runtime addSymbol: method selector.
-	format := runtime newInteger: method format.
-	code := runtime newString: method source.
+	method := runtime sendLocal: #new: to: class with: { size }.
+	astcodes := runtime newByteArray: local astcodes.
+	selector := runtime addSymbol: local selector.
+	format := runtime newInteger: local format.
+	code := runtime newString: local source.
 	runtime
-		sendLocal: #astcodes: to: transferred with: { astcodes };
-		sendLocal: #classBinding: to: transferred with: { wrappee };
-		sendLocal: #selector: to: transferred with: { selector };
-		sendLocal: #format: to: transferred with: { format };
-		sendLocal: #sourceObject: to: transferred with: { code }.
-	method withIndexDo: [ :literal :i | 
+		sendLocal: #astcodes: to: method with: { astcodes };
+		sendLocal: #classBinding: to: method with: { wrappee };
+		sendLocal: #selector: to: method with: { selector };
+		sendLocal: #format: to: method with: { format };
+		sendLocal: #sourceObject: to: method with: { code }.
+	local withIndexDo: [ :literal :i | 
 		| tliteral |
-		tliteral := runtime transferLiteral: literal.
-		transferred at: i put: tliteral ].
+		tliteral := runtime bootstrapper transferLiteral: literal.
+		method at: i put: tliteral ].
 	md := runtime sendLocal: #methodDictionary to: wrappee.
 	runtime sendLocal: #at:put: to: md with: { 
 			selector.
-			transferred }.
-	^ transferred
+			method }.
+	^ method
 ]
 
 { #category : #inquiries }
@@ -140,7 +140,7 @@ PowerlangSpeciesWrapper >> definition [
 { #category : #testing }
 PowerlangSpeciesWrapper >> includesSelector: aSymbol [
 	| symbol |
-	symbol := runtime symbolFromLocal: aSymbol.
+	symbol := runtime addSymbol: aSymbol.
 	^(super includesSelector: symbol) asLocalObject
 ]
 
@@ -157,6 +157,11 @@ PowerlangSpeciesWrapper >> instanceVariablesString [
 			self instVarNames
 				do: [ :n | s nextPutAll: n  ]
 				separatedBy: [ s space ] ]
+]
+
+{ #category : #inquiries }
+PowerlangSpeciesWrapper >> metaclass [
+	^self class on: (runtime sendLocal: #class to: wrappee) runtime: runtime 
 ]
 
 { #category : #inquiries }

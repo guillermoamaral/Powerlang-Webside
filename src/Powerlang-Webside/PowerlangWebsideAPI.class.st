@@ -81,7 +81,6 @@ self halt.
 PowerlangWebsideAPI >> applyAddMethodChange: aRBAddMethodChange [
 
 	| class |
-	self halt.
 	class := self classNamed: aRBAddMethodChange changeClassName.
 	class ifNil: [ self error: 'Unexisting class' ].
 	class compile: aRBAddMethodChange source
@@ -107,6 +106,12 @@ PowerlangWebsideAPI >> applyRemoveMethodChange: aRBRemoveMethodChange [
 	class := self classNamed: aRBRemoveMethodChange changeClassName.
 	class ifNil: [ self error: 'Unexisting class' ].
 	class removeSelector: aRBRemoveMethodChange selector
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> bodyAt: aString [
+
+	^ self bodyAt: aString ifAbsent: nil
 ]
 
 { #category : #private }
@@ -146,7 +151,7 @@ PowerlangWebsideAPI >> classNamed: aString [
 		         detect: [ :c | c name = name ]
 		         ifNone: [ ^ nil ].
 	^ metaclass
-		  ifTrue: [ class class ]
+		  ifTrue: [ class metaclass ]
 		  ifFalse: [ class ]
 ]
 
@@ -160,7 +165,7 @@ PowerlangWebsideAPI >> classTreeFrom: aPowerlangSpeciesWrapper depth: anInteger 
 				at: 'name' put: aPowerlangSpeciesWrapper name;
 				at: 'superclass'
 					put:
-					(superclass == self runtime nil
+					(superclass = self runtime nil
 						ifFalse: [ superclass name ]);
 				yourself ]
 		ifFalse: [ aPowerlangSpeciesWrapper asWebsideJson ].
@@ -227,6 +232,33 @@ PowerlangWebsideAPI >> compilationError: error [
 	^ (ZnResponse statusCode: 409) entity: entity
 ]
 
+{ #category : #'debugging endpoints' }
+PowerlangWebsideAPI >> createDebugger [
+
+	| id process exception context debugger |
+	id := self bodyAt: 'evaluation' ifAbsent: [ ^ self notFound ].
+	id := UUID fromString: id.
+	process := self evaluations at: id ifAbsent: [ ^ self notFound ].
+	exception := process suspendedContext exception.
+	context := exception signalerContext.
+	self halt.
+	debugger := process
+		            newDebugSessionNamed: exception description
+		            startedAt: context.
+	context selector == #doesNotUnderstand: ifTrue: [ 
+		context := context sender ].
+	debugger restart: context.
+	context selector == #halt ifTrue: [ 
+		debugger
+			stepOver;
+			stepOver ].
+	self debuggers at: id put: debugger.
+	^ debugger asWebsideJson
+		  at: 'id' put: id asString;
+		  at: 'description' put: debugger name;
+		  yourself
+]
+
 { #category : #private }
 PowerlangWebsideAPI >> defaultRootClass [
 
@@ -243,6 +275,78 @@ PowerlangWebsideAPI >> defaultRootClass [
 PowerlangWebsideAPI >> dialect [
 
 	^ 'Powerlang'
+]
+
+{ #category : #'evaluation  endpoints' }
+PowerlangWebsideAPI >> evaluateExpression [
+
+	| debug expression sync pin id semaphore object process block json |
+	debug := self bodyAt: 'debug'.
+	debug == true ifTrue: [ ^ self debugExpression ].
+	expression := self bodyAt: 'expression'.
+	sync := (self bodyAt: 'sync') ifNil: true.
+	pin := (self bodyAt: 'pin') ifNil: false.
+	id := self newID.
+	semaphore := Semaphore new.
+	block := [ 
+	         [ object := self evaluateExpression: expression ]
+		         on: Exception
+		         do: [ :exception | 
+			         semaphore signal.
+			         process
+				         suspendedContext: exception signalerContext;
+				         suspend ].
+	         self evaluations removeKey: id ifAbsent: nil.
+	         (sync not or: [ pin ]) ifTrue: [ 
+		         self objects at: id put: object ].
+	         semaphore signal.
+	         object ].
+	process := block newProcess.
+	self evaluations at: id put: process.
+	process resume.
+	sync ifTrue: [ 
+		semaphore wait.
+		object ifNil: [ ^ self evaluationError: id ].
+		json := object asWebsideJson.
+		pin ifTrue: [ json at: 'id' put: id asString ].
+		^ json ].
+	^ self newJsonObject
+		  at: 'id' put: id asString;
+		  at: 'expression' put: expression;
+		  yourself
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> evaluateExpression: aString [
+
+	| class  |
+	class := self classNamed: 'Object'.
+	class compile: 'doIt ^' , aString.
+	^class new doIt
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> evaluationError: id [
+
+	| process json entity |
+	process := self evaluations at: id.
+	json := self newJsonObject
+		        at: 'description'
+		        put: process suspendedContext exception description;
+		        at: 'evaluation' put: id asString;
+		        yourself.
+	entity := ZnStringEntity
+		          with: (NeoJSONWriter toString: json)
+		          type: (ZnMimeType applicationJson
+				           charSet: 'utf-8';
+				           yourself).
+	^ ZnResponse serverErrorWithEntity: entity
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> evaluations [
+
+	^ server evaluations
 ]
 
 { #category : #private }
@@ -345,8 +449,39 @@ PowerlangWebsideAPI >> methods [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> newID [
+
+	^ UUID new
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> newJsonObject [
+
+	^ NeoJSONObject new
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> notFound [
 	^ ZnResponse notFound: 'resource not found'
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> objects [
+
+	^ server objects
+]
+
+{ #category : #'objects endpoints' }
+PowerlangWebsideAPI >> pinnedObject [
+
+	| id object |
+	id := self requestedId.
+	self evaluations at: id ifPresent: [ :process | 
+		process isSuspended ifTrue: [ ^ self evaluationError: id ] ].
+	object := self objects at: id ifAbsent: [ ^ self notFound ].
+	^ object asWebsideJson
+		  at: 'id' put: id asString;
+		  yourself
 ]
 
 { #category : #private }
@@ -470,6 +605,14 @@ PowerlangWebsideAPI >> requestedClass [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> requestedId [
+
+	| id |
+	id := self urlAt: 'id'.
+	^ id ifNotNil: [ UUID fromString: id ]
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> requestedSelector [
 
 	| selector |
@@ -522,6 +665,15 @@ PowerlangWebsideAPI >> subclassesOf: aSpeciesMap [
 	spec := image => aSpeciesMap name.
 	^ spec subclasses
 		collect: [ :c | image speciesFor: image => c name ]
+]
+
+{ #category : #'objects endpoints' }
+PowerlangWebsideAPI >> unpinObject [
+
+	self objects
+		removeKey: self requestedId
+		ifAbsent: [ ^ self notFound ].
+	^ nil
 ]
 
 { #category : #private }
