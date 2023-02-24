@@ -252,7 +252,7 @@ PowerlangWebsideAPI >> createDebugger [
 { #category : #'debugging endpoints' }
 PowerlangWebsideAPI >> debuggerFrame [
 
-	| debugger index frame interval method |
+	| debugger index frame interval runtime method receiver class |
 	debugger := self debuggers
 		            at: self requestedId
 		            ifAbsent: [ ^ self notFound ].
@@ -260,16 +260,23 @@ PowerlangWebsideAPI >> debuggerFrame [
 	frame := debugger context backtrace
 		         at: index
 		         ifAbsent: [ ^ self notFound ].
-	method := self newJsonObject
-		          at: 'source' put: frame first asString;
-		          yourself.
 	interval := self newJsonObject
 		            at: 'start' put: 0;
 		            at: 'end' put: 0;
 		            yourself.
-	^ frame asWebsideJson
+	runtime := self runtime.
+	method := PowerlangMethodWrapper on: frame first runtime: runtime.
+	receiver := PowerlangObjectWrapper on: frame second runtime: runtime.
+	class := receiver objectClass.
+	^ self newJsonObject
 		  at: 'index' put: index;
-		  at: 'method' put: method;
+		  at: 'label' put: class name , ' >> '
+			  ,
+				  (method selector
+					   ifNotNil: [ :s | s asString ]
+					   ifNil: [ '_' ]);
+		  at: 'class' put: class asWebsideJson;
+		  at: 'method' put: method asWebsideJson;
 		  at: 'interval' put: interval;
 		  yourself
 ]
@@ -277,14 +284,20 @@ PowerlangWebsideAPI >> debuggerFrame [
 { #category : #'debugging endpoints' }
 PowerlangWebsideAPI >> debuggerFrames [
 
-	| debugger |
+	| debugger runtime method receiver |
 	debugger := self debuggers
 		            at: self requestedId
 		            ifAbsent: [ ^ self notFound ].
-	^ debugger context backtrace withIndexCollect: [ :f :i | 
+	runtime := self runtime.
+	^ debugger context backtrace withIndexCollect: [ :array :i | 
+		  method := PowerlangMethodWrapper on: array first runtime: runtime.
+		  receiver := PowerlangObjectWrapper
+			              on: array second
+			              runtime: runtime.
 		  self newJsonObject
-			  at: 'index' put: i; 
-			  at: 'label' put: f last asString;
+			  at: 'index' put: i;
+			  at: 'label' put: receiver objectClass name , ' >> '
+				  , (method selector ifNotNil: [ :s | s asString ] ifNil: [ '_' ]);
 			  yourself ]
 ]
 

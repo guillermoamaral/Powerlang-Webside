@@ -21,7 +21,7 @@ PowerlangMethodWrapper >> asWebsideJson [
 
 { #category : #inquiries }
 PowerlangMethodWrapper >> selector [
-	^ super selector wrappee asLocalString
+	^ super selector ifNotNil: [ :s | s wrappee asLocalString] 
 ]
 
 { #category : #inquiries }
