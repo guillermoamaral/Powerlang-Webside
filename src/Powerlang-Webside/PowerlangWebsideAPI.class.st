@@ -241,22 +241,57 @@ PowerlangWebsideAPI >> createDebugger [
 	process := self evaluations at: id ifAbsent: [ ^ self notFound ].
 	exception := process suspendedContext exception.
 	context := exception signalerContext.
-	self halt.
-	debugger := process
-		            newDebugSessionNamed: exception description
-		            startedAt: context.
-	context selector == #doesNotUnderstand: ifTrue: [ 
-		context := context sender ].
-	debugger restart: context.
-	context selector == #halt ifTrue: [ 
-		debugger
-			stepOver;
-			stepOver ].
+	debugger := PowerlangDebuggerWrapper new context: exception context.
 	self debuggers at: id put: debugger.
 	^ debugger asWebsideJson
 		  at: 'id' put: id asString;
-		  at: 'description' put: debugger name;
+		  at: 'description' put: exception description;
 		  yourself
+]
+
+{ #category : #'debugging endpoints' }
+PowerlangWebsideAPI >> debuggerFrame [
+
+	| debugger index frame interval method |
+	debugger := self debuggers
+		            at: self requestedId
+		            ifAbsent: [ ^ self notFound ].
+	index := self requestedIndex.
+	frame := debugger context backtrace
+		         at: index
+		         ifAbsent: [ ^ self notFound ].
+	method := self newJsonObject
+		          at: 'source' put: frame first asString;
+		          yourself.
+	interval := self newJsonObject
+		            at: 'start' put: 0;
+		            at: 'end' put: 0;
+		            yourself.
+	^ frame asWebsideJson
+		  at: 'index' put: index;
+		  at: 'method' put: method;
+		  at: 'interval' put: interval;
+		  yourself
+]
+
+{ #category : #'debugging endpoints' }
+PowerlangWebsideAPI >> debuggerFrames [
+
+	| debugger |
+	debugger := self debuggers
+		            at: self requestedId
+		            ifAbsent: [ ^ self notFound ].
+	^ debugger context backtrace withIndexCollect: [ :f :i | 
+		  self newJsonObject
+			  at: 'index' put: i; 
+			  at: 'label' put: f last asString;
+			  yourself ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> debuggers [
+
+	^ server debuggers
 ]
 
 { #category : #private }
@@ -269,6 +304,19 @@ PowerlangWebsideAPI >> defaultRootClass [
 	[ root superclass wrappee == runtime nil ] whileFalse: [ 
 		root := root superclass ].
 	^ root
+]
+
+{ #category : #'debugging endpoints' }
+PowerlangWebsideAPI >> deleteDebugger [
+
+	| id debugger |
+	id := self requestedId.
+	debugger := self debuggers at: id ifAbsent: nil.
+	debugger notNil ifTrue: [ 
+		"debugger terminate."
+		self debuggers removeKey: id ifAbsent: nil.
+		self evaluations removeKey: id ifAbsent: nil ].
+	^ id
 ]
 
 { #category : #'code endpoints' }
@@ -373,6 +421,25 @@ PowerlangWebsideAPI >> filterByVariable: aCollection [
 			(slot notNil
 				and: [ (slot isReadIn: m) or: [ slot isWrittenIn: m ] ])
 				or: [ classVar notNil and: [ classVar isReferencedIn: m ] ] ]
+]
+
+{ #category : #'debugging endpoints' }
+PowerlangWebsideAPI >> frameBindings [
+
+	| debugger frame |
+	debugger := self debuggers
+		            at: self requestedId
+		            ifAbsent: [ ^ self notFound ].
+	frame := debugger context backtrace
+		         at: self requestedIndex
+		         ifAbsent: [ ^ self notFound ].
+
+	^ #() collect: [ 
+		  :b | 
+		  self newJsonObject
+			  at: 'name' put: b key asString;
+			  at: 'value' put: b value printString;
+			  yourself ]
 ]
 
 { #category : #private }
@@ -610,6 +677,14 @@ PowerlangWebsideAPI >> requestedId [
 	| id |
 	id := self urlAt: 'id'.
 	^ id ifNotNil: [ UUID fromString: id ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> requestedIndex [
+
+	| index |
+	index := self urlAt: 'index'.
+	^ index ifNotNil: [ index asInteger ]
 ]
 
 { #category : #private }
