@@ -36,18 +36,18 @@ PowerlangObjectWrapper >> asLocalObject [
 
 { #category : #converting }
 PowerlangObjectWrapper >> asWebsideJson [
-	| variable |
+
+	| variable printed |
 	variable := self objectClass isVariable wrappee = runtime true.
+	printed := runtime sendLocal: #printString to: wrappee.
 	^ NeoJSONObject new
-		at: 'class' put: self objectClass name;
-		at: 'indexable' put: variable;
-		at: 'size'
-			put:
-			(variable
-				ifTrue: [ self size wrappee value ]
-				ifFalse: [ 0 ]);
-		at: 'printString' put: self printString;
-		yourself
+		  at: 'class' put: self objectClass name;
+		  at: 'indexable' put: variable;
+		  at: 'size' put: (variable
+				   ifTrue: [ self size wrappee value ]
+				   ifFalse: [ 0 ]);
+		  at: 'printString' put: printed asLocalString;
+		  yourself
 ]
 
 { #category : #printing }
