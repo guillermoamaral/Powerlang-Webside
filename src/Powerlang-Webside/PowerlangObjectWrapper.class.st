@@ -129,6 +129,11 @@ PowerlangObjectWrapper >> runtime: aPowerlangLMR [
 	runtime := aPowerlangLMR
 ]
 
+{ #category : #testing }
+PowerlangObjectWrapper >> slotAt: index [
+	^self class on: (wrappee slotAt: index) runtime: runtime 
+]
+
 { #category : #printing }
 PowerlangObjectWrapper >> stDisplayString [
 

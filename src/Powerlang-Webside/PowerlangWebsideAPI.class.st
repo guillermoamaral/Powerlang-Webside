@@ -472,6 +472,26 @@ PowerlangWebsideAPI >> implementorsOf: aSymbol [
 		  thenCollect: [ :class | class >> aSymbol ]
 ]
 
+{ #category : #private }
+PowerlangWebsideAPI >> indexedSlotsOf: anObject [
+
+	| from to slot |
+	anObject class isVariable ifFalse: [ ^ self notFound ].
+	from := self
+		        queryAt: 'from'
+		        ifPresent: [ :f | f asInteger ]
+		        ifAbsent: [ 1 ].
+	to := self
+		      queryAt: 'to'
+		      ifPresent: [ :t | t asInteger ]
+		      ifAbsent: [ anObject size ].
+	^ (from to: to) collect: [ :i | 
+		  slot := anObject basicAt: i.
+		  slot asWebsideJson
+			  at: 'slot' put: i;
+			  yourself ]
+]
+
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> instanceVariables [
 	| class |
@@ -486,6 +506,15 @@ PowerlangWebsideAPI >> instanceVariables [
 						at: 'class' put: c name;
 						at: 'type' put: 'instance';
 						yourself ] ]
+]
+
+{ #category : #private }
+PowerlangWebsideAPI >> instanceVariablesOf: anObject [
+
+	^ anObject objectClass allInstVarNames collect: [ :n | 
+		  self newJsonObject
+			  at: 'name' put: n;
+			  yourself ]
 ]
 
 { #category : #'code endpoints' }
@@ -529,6 +558,17 @@ PowerlangWebsideAPI >> methods [
 ]
 
 { #category : #private }
+PowerlangWebsideAPI >> namedSlotsOf: anObject [
+
+	| slot |
+	^ anObject objectClass allInstVarNames collect: [ :n | 
+		  slot := self slot: n of: anObject ifAbsent: nil.
+		  slot asWebsideJson
+			  at: 'slot' put: n;
+			  yourself ]
+]
+
+{ #category : #private }
 PowerlangWebsideAPI >> newID [
 
 	^ UUID new
@@ -562,6 +602,25 @@ PowerlangWebsideAPI >> pinnedObject [
 	^ object asWebsideJson
 		  at: 'id' put: id asString;
 		  yourself
+]
+
+{ #category : #'objects endpoints' }
+PowerlangWebsideAPI >> pinnedObjectSlots [
+
+	| id object path index last |
+	id := self requestedId.
+	object := self objects at: id ifAbsent: [ ^ self notFound ].
+	path := request url segments.
+	index := path indexOf: 'objects'.
+	path from: index + 2 to: path size - 1 do: [ :s | 
+		object := self slot: s of: object ifAbsent: [ ^ self notFound ] ].
+	last := path last.
+	last = 'instance-variables' ifTrue: [ 
+		^ self instanceVariablesOf: object ].
+	last = 'named-slots' ifTrue: [ ^ self namedSlotsOf: object ].
+	last = 'indexed-slots' ifTrue: [ ^ self indexedSlotsOf: object ].
+	object := self slot: last of: object ifAbsent: [ ^ self notFound ].
+	^ object asWebsideJson
 ]
 
 { #category : #private }
@@ -737,6 +796,31 @@ PowerlangWebsideAPI >> server: aWebsideServer [
 	server := aWebsideServer
 ]
 
+{ #category : #private }
+PowerlangWebsideAPI >> slot: aString of: anObject ifAbsent: aBlock [
+
+	| index |
+	aString asInteger asString = aString ifTrue: [ 
+		index := aString asInteger.
+		anObject isCollection
+			ifTrue: [ 
+				index > anObject size ifTrue: [ ^ aBlock value ].
+				^ [ anObject at: index ]
+					  on: Error
+					  do: [ anObject basicAt: index ] ]
+			ifFalse: [ 
+				anObject class isVariable ifTrue: [ 
+					^ anObject at: index ].
+				index > anObject objectClass instSize ifTrue: [ 
+					^ aBlock value ].
+				^ anObject instVarAt: index ] ].
+	index := anObject objectClass allInstVarNames 
+		         indexOf: aString.
+	^ index > 0
+		  ifTrue: [ anObject slotAt: index ]
+		  ifFalse: [ aBlock value ]
+]
+
 { #category : #'code endpoints' }
 PowerlangWebsideAPI >> subclasses [
 
@@ -744,15 +828,6 @@ PowerlangWebsideAPI >> subclasses [
 	class := self requestedClass.
 	class ifNil: [ ^ self notFound ].
 	^ class subclasses collect: [ :c | c asWebsideJson ]
-]
-
-{ #category : #private }
-PowerlangWebsideAPI >> subclassesOf: aSpeciesMap [
-	| image spec |
-	image := self image.
-	spec := image => aSpeciesMap name.
-	^ spec subclasses
-		collect: [ :c | image speciesFor: image => c name ]
 ]
 
 { #category : #'objects endpoints' }

@@ -15,6 +15,13 @@ PowerlangSpeciesWrapper >> >> aSymbol [
 ]
 
 { #category : #inquiries }
+PowerlangSpeciesWrapper >> allInstVarNames [
+
+	^ super allInstVarNames asArray wrappee slots collect: [ :s | 
+		  s asLocalString ]
+]
+
+{ #category : #inquiries }
 PowerlangSpeciesWrapper >> allSubclasses [
 	^ super allSubclasses asArray wrappee slots
 		collect: [ :c | PowerlangSpeciesWrapper on: c runtime: runtime ]
